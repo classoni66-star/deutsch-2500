@@ -202,16 +202,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 (function () {
   'use strict';
 
-  /* ------------------------------------------------------------------
-   * Data — pronunciation corrected against Hochdeutsch.
-   *   say   = headword respelling (for display AND English-voice fallback)
-   *   deSay = [word, respelling] pairs for each sentence
-   * Convention:
-   *   kh  (lowercase) = SOFT ch — after i e ä ö ü
-   *   KH  (uppercase) = THROATY ch — after a o u
-   *   Ö = "eh" with rounded lips  |  Ü = "ee" with rounded lips
-   *   CAPITALS = stressed syllable
-   * ------------------------------------------------------------------ */
   var starter = [
     {"word": "ich", "english": "I", "pos": "pron", "say": "ikh", "visual": "👤", "de": "Ich lerne Deutsch.", "en": "I am learning German.", "deSay": [["Ich", "ikh"], ["lerne", "LAIR-nuh"], ["Deutsch", "DOYTCH"]], "level": "A1"},
     {"word": "du", "english": "you (informal)", "pos": "pron", "say": "doo", "visual": "🫵", "de": "Wie heißt du?", "en": "What is your name?", "deSay": [["Wie", "vee"], ["heißt", "HYST"], ["du", "doo"]], "level": "A1"},
@@ -273,9 +263,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     {"word": "Euro", "english": "euro", "pos": "noun", "say": "OY-roh", "visual": "💶", "de": "Das kostet zehn Euro.", "en": "That costs ten euros.", "deSay": [["Das", "dahs"], ["kostet", "KOS-tuht"], ["zehn", "tsehn"], ["Euro", "OY-roh"]], "level": "A1"}
   ];
 
-  /* ------------------------------------------------------------------
-   * State
-   * ------------------------------------------------------------------ */
   var STORAGE_KEY = 'deutsch2500learned';
   var words = starter.slice();
   var filtered = words.slice();
@@ -284,9 +271,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
   var $ = function (id) { return document.getElementById(id); };
 
-  /* ------------------------------------------------------------------
-   * Utilities
-   * ------------------------------------------------------------------ */
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -309,15 +293,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     } catch (e) { /* storage may be unavailable */ }
   }
 
-  /* ------------------------------------------------------------------
-   * Speech synthesis — dual path
-   *
-   *   German voice available  → speak German orthography  (accurate)
-   *   No German voice         → speak English respelling  (approximate)
-   *
-   * getVoices() often returns [] on first call. We poll until voices
-   * appear (or 10s timeout) and retry on every speak() call.
-   * ------------------------------------------------------------------ */
   var speechSupported = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
   var germanVoice = null;
   var voicesReady = false;
@@ -393,16 +368,15 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     }
   }
 
-  /* Convert a display respelling into something an English TTS voice
-     will pronounce as close to German as possible. Only used in
-     fallback mode. Keeps Ö→ur, Ü→ee, collapses doubled vowel runs. */
+  /* Fallback translator for English TTS: makes the respelling sound less like English */
   function ttsFallback(respelling) {
     if (!respelling) return '';
     return String(respelling)
       .replace(/ß/g, 'ss')
       .replace(/Ö/g, 'ur').replace(/ö/g, 'ur')
       .replace(/Ü/g, 'ee').replace(/ü/g, 'ee')
-      .replace(/KH/g, 'k').replace(/kh/g, 'k')
+      .replace(/KH/g, 'k')   // Throaty ch -> hard k (closer to German 'Buch')
+      .replace(/kh/g, 'h')   // Soft ch -> h (breathy, so 'ikh' -> 'ih', not 'ick')
       .replace(/ur{2,}/g, 'ur')
       .replace(/ee{2,}/g, 'ee')
       .replace(/oo{2,}/g, 'oo');
@@ -428,10 +402,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (!germanVoice) pickGermanVoice();
 
     if (germanVoice) {
-      // Accurate path: German voice + German orthography
       speakText(w.word, 'de-DE', germanVoice, 0.83);
     } else {
-      // Fallback: English voice + English respelling
       speakText(ttsFallback(w.say || w.word), 'en-US', null, 0.9);
     }
   }
@@ -447,9 +419,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (germanVoice) {
       speakText(w.de || w.word, 'de-DE', germanVoice, 0.83);
     } else {
-      var pairs = (Array.isArray(w.deSay) && w.deSay.length)
-        ? w.deSay
-        : [[w.word, w.say || w.word]];
+      var pairs = (Array.isArray(w.deSay) && w.deSay.length) ? w.deSay : [[w.word, w.say || w.word]];
       var parts = [];
       for (var i = 0; i < pairs.length; i++) {
         var p = pairs[i];
@@ -459,9 +429,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     }
   }
 
-  /* ------------------------------------------------------------------
-   * Rendering
-   * ------------------------------------------------------------------ */
   function current() {
     return filtered.length ? filtered[index % filtered.length] : null;
   }
@@ -485,14 +452,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   function renderSentenceSay(w) {
     var box = $('deSay');
     if (!box) return;
-
     var pairs = (w && Array.isArray(w.deSay)) ? w.deSay : null;
     if (!pairs || !pairs.length) {
-      box.innerHTML = '';
-      box.hidden = true;
-      return;
+      box.innerHTML = ''; box.hidden = true; return;
     }
-
     var html = '<span class="say-label">Say it</span>';
     for (var i = 0; i < pairs.length; i++) {
       var pair = pairs[i];
@@ -599,9 +562,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (view === 'quiz') newQuestion();
   }
 
-  /* ------------------------------------------------------------------
-   * Quiz
-   * ------------------------------------------------------------------ */
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
@@ -647,9 +607,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     });
   }
 
-  /* ------------------------------------------------------------------
-   * Event wiring
-   * ------------------------------------------------------------------ */
   Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (btn) {
     btn.onclick = function () { showView(btn.getAttribute('data-view')); };
   });
@@ -678,11 +635,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   $('kind').addEventListener('change', filter);
   $('newQuiz').onclick = newQuestion;
 
-  /* ------------------------------------------------------------------
-   * Init
-   * ------------------------------------------------------------------ */
   filter();
 })();
 </script>
 </body>
-        </html>
+  </html>
