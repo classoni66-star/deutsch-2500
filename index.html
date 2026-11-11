@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#102c67">
-<meta name="description" content="A starter German vocabulary trainer with audio, example sentences, filtering, progress tracking, and quick quizzes.">
+<meta name="description" content="A starter German vocabulary trainer with audio, example sentences, word-by-word IPA, filtering, progress tracking, and quick quizzes.">
 <title>Deutsch 2500 — German Vocabulary Trainer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102c67'/%3E%3Ctext x='32' y='43' font-family='system-ui,sans-serif' font-size='24' font-weight='800' text-anchor='middle' fill='white'%3EDW%3C/text%3E%3C/svg%3E">
 <style>
-:root{--navy:#102c67;--blue:#1267d5;--cyan:#21b8e7;--ink:#172033;--muted:#667085;--paper:#f4f7fb;--line:#e3e9f2;--green:#17834e}
+:root{--navy:#102c67;--blue:#1267d5;--cyan:#21b8e7;--ink:#172033;--muted:#667085;--paper:#f4f7fb;--line:#e3e9f2;--green:#17834e;--ipa:"Charis SIL","Doulos SIL","Gentium Plus","Lucida Sans Unicode","Segoe UI","Noto Sans",system-ui,sans-serif}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink)}
 header{background:var(--navy);color:white;padding:18px max(18px,calc((100% - 1050px)/2))}
@@ -35,13 +35,18 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .wordrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .word{font-size:clamp(32px,7vw,52px);font-weight:800;color:var(--navy);margin:8px 0;overflow-wrap:anywhere}
 .meaning{font-size:19px;margin:0 0 8px}
-.ipa{color:var(--muted);font-size:14px;min-height:18px}
+.ipa{color:var(--muted);font-size:14px;min-height:18px;font-family:var(--ipa);letter-spacing:.02em}
 .visual{height:160px;border-radius:14px;background:linear-gradient(135deg,#eaf6ff,#f4f0ff);display:grid;place-items:center;font-size:94px;margin:18px 0}
 .audio{border:0;border-radius:12px;background:var(--blue);color:white;padding:11px 15px;font-weight:700;cursor:pointer}
 .audio.secondary{background:#eaf2ff;color:var(--navy)}
 .example{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
 .example .de{font-size:18px;font-weight:700}
 .example .en{color:var(--muted);margin-top:5px}
+.de-ipa{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-top:9px;padding:10px 12px;background:#f6f9ff;border-radius:10px;font-family:var(--ipa);font-size:13px;color:var(--muted);line-height:1.6}
+.de-ipa .ipa-label{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:10px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.de-ipa .tok{white-space:nowrap}
+.de-ipa .tok b{color:var(--ink);font-weight:650}
+.de-ipa .sym{color:var(--muted)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 .actions button{border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer}
 .known{background:#e5f7ed;color:#11643a}
@@ -120,6 +125,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
         <div class="example">
           <div class="eyebrow">In a sentence</div>
           <div class="de" id="de"></div>
+          <div class="de-ipa" id="deIpa" aria-label="Pronunciation of each word in the sentence"></div>
           <div class="en" id="en"></div>
         </div>
         <div class="actions">
@@ -131,8 +137,11 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
 
       <aside class="card side">
         <h3>How to study</h3>
-        <p>Look at the visual, listen to the German pronunciation, then say the word aloud before reading the example sentence.</p>
-        <div class="hint"><b>Pronunciation tip</b><br><span id="tip">Listen first, then repeat slowly. German nouns always begin with a capital letter.</span></div>
+        <p>Look at the visual, listen to the German pronunciation, then say the word aloud before reading the example sentence. Read the word-by-word IPA under the sentence to check each sound.</p>
+        <div class="hint">
+          <b>Pronunciation tip</b><br>
+          <span id="tip">Listen first, then repeat slowly. The soft <b>ç</b> in <i>ich</i>, <i>nicht</i>, <i>wichtig</i> is made at the front of the mouth — like a whispered "y" — not like the "ch" in English "cheese".</span>
+        </div>
         <p><b>Audio:</b> Uses a German voice available on your device/browser. Audio quality and available voices depend on your phone.</p>
         <p><b>Progress:</b> Your learned words are saved on this device.</p>
       </aside>
@@ -156,7 +165,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
     </div>
   </section>
 
-  <footer>Learning prototype. The starter set is curated for practice; the full 2,500-word frequency-ranked collection is the next content expansion.</footer>
+  <footer>Learning prototype. IPA follows Duden <i>Aussprachewörterbuch</i> (standard German), including word-by-word transcription of each example sentence. Starter set curated for practice; the full 2,500-word frequency-ranked collection is the next content expansion.</footer>
 </main>
 
 <noscript>
@@ -168,67 +177,71 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
   'use strict';
 
   /* ------------------------------------------------------------------
-   * Data
+   * Data — IPA checked against Duden Aussprachewörterbuch.
+   * Each entry carries:
+   *   ipa    = pronunciation of the headword
+   *   deIpa  = [word, ipa] pairs for every word in the example sentence
+   *            (explicit pairs — no tokenizer, so punctuation never breaks)
    * ------------------------------------------------------------------ */
   var starter = [
-    {"word": "ich", "english": "I", "pos": "pron", "ipa": "ɪç", "visual": "👤", "de": "Ich lerne Deutsch.", "en": "I am learning German.", "level": "A1"},
-    {"word": "du", "english": "you (informal)", "pos": "pron", "ipa": "duː", "visual": "🫵", "de": "Wie heißt du?", "en": "What is your name?", "level": "A1"},
-    {"word": "er", "english": "he", "pos": "pron", "ipa": "eːɐ̯", "visual": "👨", "de": "Er wohnt in Berlin.", "en": "He lives in Berlin.", "level": "A1"},
-    {"word": "sie", "english": "she; they; you (formal)", "pos": "pron", "ipa": "ziː", "visual": "👩", "de": "Sie spricht Deutsch.", "en": "She speaks German.", "level": "A1"},
-    {"word": "wir", "english": "we", "pos": "pron", "ipa": "viːɐ̯", "visual": "👥", "de": "Wir lernen zusammen.", "en": "We are learning together.", "level": "A1"},
-    {"word": "sein", "english": "to be", "pos": "verb", "ipa": "zaɪ̯n", "visual": "✨", "de": "Ich bin Student.", "en": "I am a student.", "level": "A1"},
-    {"word": "haben", "english": "to have", "pos": "verb", "ipa": "ˈhaːbn̩", "visual": "🤲", "de": "Ich habe Zeit.", "en": "I have time.", "level": "A1"},
-    {"word": "werden", "english": "to become; will", "pos": "verb", "ipa": "ˈveːɐ̯dn̩", "visual": "🔄", "de": "Es wird besser.", "en": "It is getting better.", "level": "A1"},
-    {"word": "können", "english": "can; to be able to", "pos": "verb", "ipa": "ˈkœnən", "visual": "💪", "de": "Ich kann schwimmen.", "en": "I can swim.", "level": "A1"},
-    {"word": "müssen", "english": "must; to have to", "pos": "verb", "ipa": "ˈmʏsn̩", "visual": "❗", "de": "Ich muss arbeiten.", "en": "I have to work.", "level": "A1"},
-    {"word": "wollen", "english": "to want", "pos": "verb", "ipa": "ˈvɔlən", "visual": "🎯", "de": "Wir wollen gehen.", "en": "We want to go.", "level": "A1"},
-    {"word": "machen", "english": "to do; to make", "pos": "verb", "ipa": "ˈmaxn̩", "visual": "🛠️", "de": "Was machst du heute?", "en": "What are you doing today?", "level": "A1"},
-    {"word": "gehen", "english": "to go; to walk", "pos": "verb", "ipa": "ˈɡeːən", "visual": "🚶", "de": "Ich gehe nach Hause.", "en": "I am going home.", "level": "A1"},
-    {"word": "kommen", "english": "to come", "pos": "verb", "ipa": "ˈkɔmən", "visual": "🚶", "de": "Kommst du morgen?", "en": "Are you coming tomorrow?", "level": "A1"},
-    {"word": "sagen", "english": "to say; to tell", "pos": "verb", "ipa": "ˈzaːɡn̩", "visual": "🗣️", "de": "Was soll ich sagen?", "en": "What should I say?", "level": "A1"},
-    {"word": "wissen", "english": "to know (a fact)", "pos": "verb", "ipa": "ˈvɪsn̩", "visual": "🧠", "de": "Ich weiß es nicht.", "en": "I don't know.", "level": "A1"},
-    {"word": "sehen", "english": "to see", "pos": "verb", "ipa": "ˈzeːən", "visual": "👀", "de": "Ich sehe einen Vogel.", "en": "I see a bird.", "level": "A1"},
-    {"word": "geben", "english": "to give", "pos": "verb", "ipa": "ˈɡeːbn̩", "visual": "🎁", "de": "Gib mir bitte das Buch.", "en": "Please give me the book.", "level": "A1"},
-    {"word": "nehmen", "english": "to take", "pos": "verb", "ipa": "ˈneːmən", "visual": "🤲", "de": "Ich nehme den Bus.", "en": "I take the bus.", "level": "A1"},
-    {"word": "sprechen", "english": "to speak", "pos": "verb", "ipa": "ˈʃpʁɛçən", "visual": "💬", "de": "Sprechen Sie Englisch?", "en": "Do you speak English?", "level": "A1"},
-    {"word": "gut", "english": "good", "pos": "adj", "ipa": "ɡuːt", "visual": "👍", "de": "Das ist sehr gut.", "en": "That is very good.", "level": "A1"},
-    {"word": "groß", "english": "big; tall", "pos": "adj", "ipa": "ɡʁoːs", "visual": "📏", "de": "Das Haus ist groß.", "en": "The house is big.", "level": "A1"},
-    {"word": "klein", "english": "small", "pos": "adj", "ipa": "klaɪ̯n", "visual": "🐜", "de": "Der Hund ist klein.", "en": "The dog is small.", "level": "A1"},
-    {"word": "neu", "english": "new", "pos": "adj", "ipa": "nɔɪ̯", "visual": "🆕", "de": "Ich habe ein neues Handy.", "en": "I have a new phone.", "level": "A1"},
-    {"word": "schön", "english": "beautiful; nice", "pos": "adj", "ipa": "ʃøːn", "visual": "🌷", "de": "Das ist ein schöner Tag.", "en": "It is a beautiful day.", "level": "A1"},
-    {"word": "wichtig", "english": "important", "pos": "adj", "ipa": "ˈvɪçtɪç", "visual": "⭐", "de": "Deutsch ist wichtig für mich.", "en": "German is important to me.", "level": "A1"},
-    {"word": "der Mann", "english": "man", "pos": "noun", "ipa": "man", "visual": "👨", "de": "Der Mann arbeitet hier.", "en": "The man works here.", "level": "A1"},
-    {"word": "die Frau", "english": "woman", "pos": "noun", "ipa": "fʁaʊ̯", "visual": "👩", "de": "Die Frau liest ein Buch.", "en": "The woman is reading a book.", "level": "A1"},
-    {"word": "das Kind", "english": "child", "pos": "noun", "ipa": "kɪnt", "visual": "🧒", "de": "Das Kind spielt draußen.", "en": "The child is playing outside.", "level": "A1"},
-    {"word": "die Familie", "english": "family", "pos": "noun", "ipa": "faˈmiːli̯ə", "visual": "👨‍👩‍👧", "de": "Meine Familie ist groß.", "en": "My family is big.", "level": "A1"},
-    {"word": "das Haus", "english": "house", "pos": "noun", "ipa": "haʊ̯s", "visual": "🏠", "de": "Das Haus ist sehr alt.", "en": "The house is very old.", "level": "A1"},
-    {"word": "die Schule", "english": "school", "pos": "noun", "ipa": "ˈʃuːlə", "visual": "🏫", "de": "Die Schule beginnt um acht.", "en": "School starts at eight.", "level": "A1"},
-    {"word": "das Buch", "english": "book", "pos": "noun", "ipa": "buːx", "visual": "📘", "de": "Ich lese ein Buch.", "en": "I am reading a book.", "level": "A1"},
-    {"word": "der Fisch", "english": "fish", "pos": "noun", "ipa": "fɪʃ", "visual": "🐟", "de": "Der Fisch schwimmt im Wasser.", "en": "The fish is swimming in the water.", "level": "A1"},
-    {"word": "das Wasser", "english": "water", "pos": "noun", "ipa": "ˈvasɐ", "visual": "💧", "de": "Ich trinke Wasser.", "en": "I drink water.", "level": "A1"},
-    {"word": "das Brot", "english": "bread", "pos": "noun", "ipa": "bʁoːt", "visual": "🍞", "de": "Wir kaufen Brot.", "en": "We are buying bread.", "level": "A1"},
-    {"word": "der Apfel", "english": "apple", "pos": "noun", "ipa": "ˈapfl̩", "visual": "🍎", "de": "Der Apfel ist rot.", "en": "The apple is red.", "level": "A1"},
-    {"word": "die Zeit", "english": "time", "pos": "noun", "ipa": "tsaɪ̯t", "visual": "⏰", "de": "Ich habe heute keine Zeit.", "en": "I have no time today.", "level": "A1"},
-    {"word": "der Tag", "english": "day", "pos": "noun", "ipa": "taːk", "visual": "🌞", "de": "Guten Tag!", "en": "Good afternoon!", "level": "A1"},
-    {"word": "die Arbeit", "english": "work; job", "pos": "noun", "ipa": "ˈaʁbaɪ̯t", "visual": "💼", "de": "Meine Arbeit beginnt um neun.", "en": "My work starts at nine.", "level": "A1"},
-    {"word": "die Stadt", "english": "city", "pos": "noun", "ipa": "ʃtat", "visual": "🏙️", "de": "Die Stadt ist sehr groß.", "en": "The city is very big.", "level": "A1"},
-    {"word": "heute", "english": "today", "pos": "adv", "ipa": "ˈhɔʏtə", "visual": "📅", "de": "Heute lerne ich Deutsch.", "en": "Today I am learning German.", "level": "A1"},
-    {"word": "morgen", "english": "tomorrow; morning", "pos": "adv", "ipa": "ˈmɔʁɡn̩", "visual": "🌅", "de": "Morgen habe ich Zeit.", "en": "Tomorrow I have time.", "level": "A1"},
-    {"word": "jetzt", "english": "now", "pos": "adv", "ipa": "jɛtst", "visual": "⏱️", "de": "Ich muss jetzt gehen.", "en": "I have to go now.", "level": "A1"},
-    {"word": "immer", "english": "always", "pos": "adv", "ipa": "ˈɪmɐ", "visual": "🔁", "de": "Er kommt immer pünktlich.", "en": "He is always on time.", "level": "A1"},
-    {"word": "nicht", "english": "not", "pos": "part", "ipa": "nɪçt", "visual": "🚫", "de": "Ich verstehe das nicht.", "en": "I do not understand that.", "level": "A1"},
-    {"word": "und", "english": "and", "pos": "conj", "ipa": "ʊnt", "visual": "➕", "de": "Du und ich lernen Deutsch.", "en": "You and I are learning German.", "level": "A1"},
-    {"word": "aber", "english": "but", "pos": "conj", "ipa": "ˈaːbɐ", "visual": "↔️", "de": "Ich bin müde, aber glücklich.", "en": "I am tired but happy.", "level": "A1"},
-    {"word": "mit", "english": "with", "pos": "prep", "ipa": "mɪt", "visual": "🤝", "de": "Ich komme mit dir.", "en": "I am coming with you.", "level": "A1"},
-    {"word": "für", "english": "for", "pos": "prep", "ipa": "fyːɐ̯", "visual": "🎁", "de": "Das Geschenk ist für dich.", "en": "The gift is for you.", "level": "A1"},
-    {"word": "in", "english": "in; into", "pos": "prep", "ipa": "ɪn", "visual": "📍", "de": "Ich wohne in Uganda.", "en": "I live in Uganda.", "level": "A1"},
-    {"word": "auf", "english": "on; onto", "pos": "prep", "ipa": "aʊ̯f", "visual": "⬆️", "de": "Das Buch liegt auf dem Tisch.", "en": "The book is on the table.", "level": "A1"},
-    {"word": "ja", "english": "yes", "pos": "part", "ipa": "jaː", "visual": "✅", "de": "Ja, ich verstehe.", "en": "Yes, I understand.", "level": "A1"},
-    {"word": "nein", "english": "no", "pos": "part", "ipa": "naɪ̯n", "visual": "❌", "de": "Nein, heute nicht.", "en": "No, not today.", "level": "A1"},
-    {"word": "bitte", "english": "please; you're welcome", "pos": "part", "ipa": "ˈbɪtə", "visual": "🙏", "de": "Ein Wasser, bitte.", "en": "A water, please.", "level": "A1"},
-    {"word": "danke", "english": "thank you", "pos": "part", "ipa": "ˈdaŋkə", "visual": "💛", "de": "Danke für deine Hilfe.", "en": "Thank you for your help.", "level": "A1"},
-    {"word": "hallo", "english": "hello", "pos": "interj", "ipa": "haˈloː", "visual": "👋", "de": "Hallo! Wie geht es dir?", "en": "Hello! How are you?", "level": "A1"},
-    {"word": "Euro", "english": "euro", "pos": "noun", "ipa": "ˈɔɪ̯ʁo", "visual": "💶", "de": "Das kostet zehn Euro.", "en": "That costs ten euros.", "level": "A1"}
+    {"word": "ich", "english": "I", "pos": "pron", "ipa": "ɪç", "visual": "👤", "de": "Ich lerne Deutsch.", "en": "I am learning German.", "deIpa": [["Ich", "ɪç"], ["lerne", "ˈlɛʁnə"], ["Deutsch", "dɔʏ̯tʃ"]], "level": "A1"},
+    {"word": "du", "english": "you (informal)", "pos": "pron", "ipa": "duː", "visual": "🫵", "de": "Wie heißt du?", "en": "What is your name?", "deIpa": [["Wie", "viː"], ["heißt", "haɪ̯st"], ["du", "duː"]], "level": "A1"},
+    {"word": "er", "english": "he", "pos": "pron", "ipa": "eːɐ̯", "visual": "👨", "de": "Er wohnt in Berlin.", "en": "He lives in Berlin.", "deIpa": [["Er", "eːɐ̯"], ["wohnt", "voːnt"], ["in", "ɪn"], ["Berlin", "bɛʁˈliːn"]], "level": "A1"},
+    {"word": "sie", "english": "she; they; you (formal)", "pos": "pron", "ipa": "ziː", "visual": "👩", "de": "Sie spricht Deutsch.", "en": "She speaks German.", "deIpa": [["Sie", "ziː"], ["spricht", "ʃpʁɪçt"], ["Deutsch", "dɔʏ̯tʃ"]], "level": "A1"},
+    {"word": "wir", "english": "we", "pos": "pron", "ipa": "viːɐ̯", "visual": "👥", "de": "Wir lernen zusammen.", "en": "We are learning together.", "deIpa": [["Wir", "viːɐ̯"], ["lernen", "ˈlɛʁnən"], ["zusammen", "tsuˈzamən"]], "level": "A1"},
+    {"word": "sein", "english": "to be", "pos": "verb", "ipa": "zaɪ̯n", "visual": "✨", "de": "Ich bin Student.", "en": "I am a student.", "deIpa": [["Ich", "ɪç"], ["bin", "bɪn"], ["Student", "ʃtuˈdɛnt"]], "level": "A1"},
+    {"word": "haben", "english": "to have", "pos": "verb", "ipa": "ˈhaːbn̩", "visual": "🤲", "de": "Ich habe Zeit.", "en": "I have time.", "deIpa": [["Ich", "ɪç"], ["habe", "ˈhaːbə"], ["Zeit", "tsaɪ̯t"]], "level": "A1"},
+    {"word": "werden", "english": "to become; will", "pos": "verb", "ipa": "ˈveːɐ̯dn̩", "visual": "🔄", "de": "Es wird besser.", "en": "It is getting better.", "deIpa": [["Es", "ɛs"], ["wird", "vɪʁt"], ["besser", "ˈbɛsɐ"]], "level": "A1"},
+    {"word": "können", "english": "can; to be able to", "pos": "verb", "ipa": "ˈkœnən", "visual": "💪", "de": "Ich kann schwimmen.", "en": "I can swim.", "deIpa": [["Ich", "ɪç"], ["kann", "kan"], ["schwimmen", "ˈʃvɪmən"]], "level": "A1"},
+    {"word": "müssen", "english": "must; to have to", "pos": "verb", "ipa": "ˈmʏsn̩", "visual": "❗", "de": "Ich muss arbeiten.", "en": "I have to work.", "deIpa": [["Ich", "ɪç"], ["muss", "mʊs"], ["arbeiten", "ˈaʁbaɪ̯tn̩"]], "level": "A1"},
+    {"word": "wollen", "english": "to want", "pos": "verb", "ipa": "ˈvɔlən", "visual": "🎯", "de": "Wir wollen gehen.", "en": "We want to go.", "deIpa": [["Wir", "viːɐ̯"], ["wollen", "ˈvɔlən"], ["gehen", "ˈɡeːən"]], "level": "A1"},
+    {"word": "machen", "english": "to do; to make", "pos": "verb", "ipa": "ˈmaxn̩", "visual": "🛠️", "de": "Was machst du heute?", "en": "What are you doing today?", "deIpa": [["Was", "vas"], ["machst", "maxst"], ["du", "duː"], ["heute", "ˈhɔʏtə"]], "level": "A1"},
+    {"word": "gehen", "english": "to go; to walk", "pos": "verb", "ipa": "ˈɡeːən", "visual": "🚶", "de": "Ich gehe nach Hause.", "en": "I am going home.", "deIpa": [["Ich", "ɪç"], ["gehe", "ˈɡeːə"], ["nach", "naːx"], ["Hause", "ˈhaʊ̯zə"]], "level": "A1"},
+    {"word": "kommen", "english": "to come", "pos": "verb", "ipa": "ˈkɔmən", "visual": "🚶", "de": "Kommst du morgen?", "en": "Are you coming tomorrow?", "deIpa": [["Kommst", "kɔmst"], ["du", "duː"], ["morgen", "ˈmɔʁɡn̩"]], "level": "A1"},
+    {"word": "sagen", "english": "to say; to tell", "pos": "verb", "ipa": "ˈzaːɡn̩", "visual": "🗣️", "de": "Was soll ich sagen?", "en": "What should I say?", "deIpa": [["Was", "vas"], ["soll", "zɔl"], ["ich", "ɪç"], ["sagen", "ˈzaːɡn̩"]], "level": "A1"},
+    {"word": "wissen", "english": "to know (a fact)", "pos": "verb", "ipa": "ˈvɪsn̩", "visual": "🧠", "de": "Ich weiß es nicht.", "en": "I don't know.", "deIpa": [["Ich", "ɪç"], ["weiß", "vaɪ̯s"], ["es", "ɛs"], ["nicht", "nɪçt"]], "level": "A1"},
+    {"word": "sehen", "english": "to see", "pos": "verb", "ipa": "ˈzeːən", "visual": "👀", "de": "Ich sehe einen Vogel.", "en": "I see a bird.", "deIpa": [["Ich", "ɪç"], ["sehe", "ˈzeːə"], ["einen", "ˈaɪ̯nən"], ["Vogel", "ˈfoːɡl̩"]], "level": "A1"},
+    {"word": "geben", "english": "to give", "pos": "verb", "ipa": "ˈɡeːbn̩", "visual": "🎁", "de": "Gib mir bitte das Buch.", "en": "Please give me the book.", "deIpa": [["Gib", "ɡiːp"], ["mir", "miːɐ̯"], ["bitte", "ˈbɪtə"], ["das", "das"], ["Buch", "buːx"]], "level": "A1"},
+    {"word": "nehmen", "english": "to take", "pos": "verb", "ipa": "ˈneːmən", "visual": "🤲", "de": "Ich nehme den Bus.", "en": "I take the bus.", "deIpa": [["Ich", "ɪç"], ["nehme", "ˈneːmə"], ["den", "deːn"], ["Bus", "bʊs"]], "level": "A1"},
+    {"word": "sprechen", "english": "to speak", "pos": "verb", "ipa": "ˈʃpʁɛçən", "visual": "💬", "de": "Sprechen Sie Englisch?", "en": "Do you speak English?", "deIpa": [["Sprechen", "ˈʃpʁɛçn̩"], ["Sie", "ziː"], ["Englisch", "ˈɛŋlɪʃ"]], "level": "A1"},
+    {"word": "gut", "english": "good", "pos": "adj", "ipa": "ɡuːt", "visual": "👍", "de": "Das ist sehr gut.", "en": "That is very good.", "deIpa": [["Das", "das"], ["ist", "ɪst"], ["sehr", "zeːɐ̯"], ["gut", "ɡuːt"]], "level": "A1"},
+    {"word": "groß", "english": "big; tall", "pos": "adj", "ipa": "ɡʁoːs", "visual": "📏", "de": "Das Haus ist groß.", "en": "The house is big.", "deIpa": [["Das", "das"], ["Haus", "haʊ̯s"], ["ist", "ɪst"], ["groß", "ɡʁoːs"]], "level": "A1"},
+    {"word": "klein", "english": "small", "pos": "adj", "ipa": "klaɪ̯n", "visual": "🐜", "de": "Der Hund ist klein.", "en": "The dog is small.", "deIpa": [["Der", "deːɐ̯"], ["Hund", "hʊnt"], ["ist", "ɪst"], ["klein", "klaɪ̯n"]], "level": "A1"},
+    {"word": "neu", "english": "new", "pos": "adj", "ipa": "nɔɪ̯", "visual": "🆕", "de": "Ich habe ein neues Handy.", "en": "I have a new phone.", "deIpa": [["Ich", "ɪç"], ["habe", "ˈhaːbə"], ["ein", "aɪ̯n"], ["neues", "ˈnɔʏ̯əs"], ["Handy", "ˈhɛndi"]], "level": "A1"},
+    {"word": "schön", "english": "beautiful; nice", "pos": "adj", "ipa": "ʃøːn", "visual": "🌷", "de": "Das ist ein schöner Tag.", "en": "It is a beautiful day.", "deIpa": [["Das", "das"], ["ist", "ɪst"], ["ein", "aɪ̯n"], ["schöner", "ˈʃøːnɐ"], ["Tag", "taːk"]], "level": "A1"},
+    {"word": "wichtig", "english": "important", "pos": "adj", "ipa": "ˈvɪçtɪç", "visual": "⭐", "de": "Deutsch ist wichtig für mich.", "en": "German is important to me.", "deIpa": [["Deutsch", "dɔʏ̯tʃ"], ["ist", "ɪst"], ["wichtig", "ˈvɪçtɪç"], ["für", "fyːɐ̯"], ["mich", "mɪç"]], "level": "A1"},
+    {"word": "der Mann", "english": "man", "pos": "noun", "ipa": "man", "visual": "👨", "de": "Der Mann arbeitet hier.", "en": "The man works here.", "deIpa": [["Der", "deːɐ̯"], ["Mann", "man"], ["arbeitet", "ˈaʁbaɪ̯tət"], ["hier", "hiːɐ̯"]], "level": "A1"},
+    {"word": "die Frau", "english": "woman", "pos": "noun", "ipa": "fʁaʊ̯", "visual": "👩", "de": "Die Frau liest ein Buch.", "en": "The woman is reading a book.", "deIpa": [["Die", "diː"], ["Frau", "fʁaʊ̯"], ["liest", "liːst"], ["ein", "aɪ̯n"], ["Buch", "buːx"]], "level": "A1"},
+    {"word": "das Kind", "english": "child", "pos": "noun", "ipa": "kɪnt", "visual": "🧒", "de": "Das Kind spielt draußen.", "en": "The child is playing outside.", "deIpa": [["Das", "das"], ["Kind", "kɪnt"], ["spielt", "ʃpiːlt"], ["draußen", "ˈdʁaʊ̯sn̩"]], "level": "A1"},
+    {"word": "die Familie", "english": "family", "pos": "noun", "ipa": "faˈmiːli̯ə", "visual": "👨‍👩‍👧", "de": "Meine Familie ist groß.", "en": "My family is big.", "deIpa": [["Meine", "ˈmaɪ̯nə"], ["Familie", "faˈmiːli̯ə"], ["ist", "ɪst"], ["groß", "ɡʁoːs"]], "level": "A1"},
+    {"word": "das Haus", "english": "house", "pos": "noun", "ipa": "haʊ̯s", "visual": "🏠", "de": "Das Haus ist sehr alt.", "en": "The house is very old.", "deIpa": [["Das", "das"], ["Haus", "haʊ̯s"], ["ist", "ɪst"], ["sehr", "zeːɐ̯"], ["alt", "alt"]], "level": "A1"},
+    {"word": "die Schule", "english": "school", "pos": "noun", "ipa": "ˈʃuːlə", "visual": "🏫", "de": "Die Schule beginnt um acht.", "en": "School starts at eight.", "deIpa": [["Die", "diː"], ["Schule", "ˈʃuːlə"], ["beginnt", "bəˈɡɪnt"], ["um", "ʊm"], ["acht", "axt"]], "level": "A1"},
+    {"word": "das Buch", "english": "book", "pos": "noun", "ipa": "buːx", "visual": "📘", "de": "Ich lese ein Buch.", "en": "I am reading a book.", "deIpa": [["Ich", "ɪç"], ["lese", "ˈleːzə"], ["ein", "aɪ̯n"], ["Buch", "buːx"]], "level": "A1"},
+    {"word": "der Fisch", "english": "fish", "pos": "noun", "ipa": "fɪʃ", "visual": "🐟", "de": "Der Fisch schwimmt im Wasser.", "en": "The fish is swimming in the water.", "deIpa": [["Der", "deːɐ̯"], ["Fisch", "fɪʃ"], ["schwimmt", "ʃvɪmt"], ["im", "ɪm"], ["Wasser", "ˈvasɐ"]], "level": "A1"},
+    {"word": "das Wasser", "english": "water", "pos": "noun", "ipa": "ˈvasɐ", "visual": "💧", "de": "Ich trinke Wasser.", "en": "I drink water.", "deIpa": [["Ich", "ɪç"], ["trinke", "ˈtʁɪŋkə"], ["Wasser", "ˈvasɐ"]], "level": "A1"},
+    {"word": "das Brot", "english": "bread", "pos": "noun", "ipa": "bʁoːt", "visual": "🍞", "de": "Wir kaufen Brot.", "en": "We are buying bread.", "deIpa": [["Wir", "viːɐ̯"], ["kaufen", "ˈkaʊ̯fn̩"], ["Brot", "bʁoːt"]], "level": "A1"},
+    {"word": "der Apfel", "english": "apple", "pos": "noun", "ipa": "ˈapfl̩", "visual": "🍎", "de": "Der Apfel ist rot.", "en": "The apple is red.", "deIpa": [["Der", "deːɐ̯"], ["Apfel", "ˈapfl̩"], ["ist", "ɪst"], ["rot", "ʁoːt"]], "level": "A1"},
+    {"word": "die Zeit", "english": "time", "pos": "noun", "ipa": "tsaɪ̯t", "visual": "⏰", "de": "Ich habe heute keine Zeit.", "en": "I have no time today.", "deIpa": [["Ich", "ɪç"], ["habe", "ˈhaːbə"], ["heute", "ˈhɔʏtə"], ["keine", "ˈkaɪ̯nə"], ["Zeit", "tsaɪ̯t"]], "level": "A1"},
+    {"word": "der Tag", "english": "day", "pos": "noun", "ipa": "taːk", "visual": "🌞", "de": "Guten Tag!", "en": "Good afternoon!", "deIpa": [["Guten", "ˈɡuːtn̩"], ["Tag", "taːk"]], "level": "A1"},
+    {"word": "die Arbeit", "english": "work; job", "pos": "noun", "ipa": "ˈaʁbaɪ̯t", "visual": "💼", "de": "Meine Arbeit beginnt um neun.", "en": "My work starts at nine.", "deIpa": [["Meine", "ˈmaɪ̯nə"], ["Arbeit", "ˈaʁbaɪ̯t"], ["beginnt", "bəˈɡɪnt"], ["um", "ʊm"], ["neun", "nɔʏ̯n"]], "level": "A1"},
+    {"word": "die Stadt", "english": "city", "pos": "noun", "ipa": "ʃtat", "visual": "🏙️", "de": "Die Stadt ist sehr groß.", "en": "The city is very big.", "deIpa": [["Die", "diː"], ["Stadt", "ʃtat"], ["ist", "ɪst"], ["sehr", "zeːɐ̯"], ["groß", "ɡʁoːs"]], "level": "A1"},
+    {"word": "heute", "english": "today", "pos": "adv", "ipa": "ˈhɔʏtə", "visual": "📅", "de": "Heute lerne ich Deutsch.", "en": "Today I am learning German.", "deIpa": [["Heute", "ˈhɔʏtə"], ["lerne", "ˈlɛʁnə"], ["ich", "ɪç"], ["Deutsch", "dɔʏ̯tʃ"]], "level": "A1"},
+    {"word": "morgen", "english": "tomorrow; morning", "pos": "adv", "ipa": "ˈmɔʁɡn̩", "visual": "🌅", "de": "Morgen habe ich Zeit.", "en": "Tomorrow I have time.", "deIpa": [["Morgen", "ˈmɔʁɡn̩"], ["habe", "ˈhaːbə"], ["ich", "ɪç"], ["Zeit", "tsaɪ̯t"]], "level": "A1"},
+    {"word": "jetzt", "english": "now", "pos": "adv", "ipa": "jɛtst", "visual": "⏱️", "de": "Ich muss jetzt gehen.", "en": "I have to go now.", "deIpa": [["Ich", "ɪç"], ["muss", "mʊs"], ["jetzt", "jɛtst"], ["gehen", "ˈɡeːən"]], "level": "A1"},
+    {"word": "immer", "english": "always", "pos": "adv", "ipa": "ˈɪmɐ", "visual": "🔁", "de": "Er kommt immer pünktlich.", "en": "He is always on time.", "deIpa": [["Er", "eːɐ̯"], ["kommt", "kɔmt"], ["immer", "ˈɪmɐ"], ["pünktlich", "ˈpʏŋktlɪç"]], "level": "A1"},
+    {"word": "nicht", "english": "not", "pos": "part", "ipa": "nɪçt", "visual": "🚫", "de": "Ich verstehe das nicht.", "en": "I do not understand that.", "deIpa": [["Ich", "ɪç"], ["verstehe", "fɛɐ̯ˈʃteːə"], ["das", "das"], ["nicht", "nɪçt"]], "level": "A1"},
+    {"word": "und", "english": "and", "pos": "conj", "ipa": "ʊnt", "visual": "➕", "de": "Du und ich lernen Deutsch.", "en": "You and I are learning German.", "deIpa": [["Du", "duː"], ["und", "ʊnt"], ["ich", "ɪç"], ["lernen", "ˈlɛʁnən"], ["Deutsch", "dɔʏ̯tʃ"]], "level": "A1"},
+    {"word": "aber", "english": "but", "pos": "conj", "ipa": "ˈaːbɐ", "visual": "↔️", "de": "Ich bin müde, aber glücklich.", "en": "I am tired but happy.", "deIpa": [["Ich", "ɪç"], ["bin", "bɪn"], ["müde", "ˈmyːdə"], ["aber", "ˈaːbɐ"], ["glücklich", "ˈɡlʏklɪç"]], "level": "A1"},
+    {"word": "mit", "english": "with", "pos": "prep", "ipa": "mɪt", "visual": "🤝", "de": "Ich komme mit dir.", "en": "I am coming with you.", "deIpa": [["Ich", "ɪç"], ["komme", "ˈkɔmə"], ["mit", "mɪt"], ["dir", "diːɐ̯"]], "level": "A1"},
+    {"word": "für", "english": "for", "pos": "prep", "ipa": "fyːɐ̯", "visual": "🎁", "de": "Das Geschenk ist für dich.", "en": "The gift is for you.", "deIpa": [["Das", "das"], ["Geschenk", "ɡəˈʃɛŋk"], ["ist", "ɪst"], ["für", "fyːɐ̯"], ["dich", "dɪç"]], "level": "A1"},
+    {"word": "in", "english": "in; into", "pos": "prep", "ipa": "ɪn", "visual": "📍", "de": "Ich wohne in Uganda.", "en": "I live in Uganda.", "deIpa": [["Ich", "ɪç"], ["wohne", "ˈvoːnə"], ["in", "ɪn"], ["Uganda", "uˈɡanda"]], "level": "A1"},
+    {"word": "auf", "english": "on; onto", "pos": "prep", "ipa": "aʊ̯f", "visual": "⬆️", "de": "Das Buch liegt auf dem Tisch.", "en": "The book is on the table.", "deIpa": [["Das", "das"], ["Buch", "buːx"], ["liegt", "liːkt"], ["auf", "aʊ̯f"], ["dem", "deːm"], ["Tisch", "tɪʃ"]], "level": "A1"},
+    {"word": "ja", "english": "yes", "pos": "part", "ipa": "jaː", "visual": "✅", "de": "Ja, ich verstehe.", "en": "Yes, I understand.", "deIpa": [["Ja", "jaː"], ["ich", "ɪç"], ["verstehe", "fɛɐ̯ˈʃteːə"]], "level": "A1"},
+    {"word": "nein", "english": "no", "pos": "part", "ipa": "naɪ̯n", "visual": "❌", "de": "Nein, heute nicht.", "en": "No, not today.", "deIpa": [["Nein", "naɪ̯n"], ["heute", "ˈhɔʏtə"], ["nicht", "nɪçt"]], "level": "A1"},
+    {"word": "bitte", "english": "please; you're welcome", "pos": "part", "ipa": "ˈbɪtə", "visual": "🙏", "de": "Ein Wasser, bitte.", "en": "A water, please.", "deIpa": [["Ein", "aɪ̯n"], ["Wasser", "ˈvasɐ"], ["bitte", "ˈbɪtə"]], "level": "A1"},
+    {"word": "danke", "english": "thank you", "pos": "part", "ipa": "ˈdaŋkə", "visual": "💛", "de": "Danke für deine Hilfe.", "en": "Thank you for your help.", "deIpa": [["Danke", "ˈdaŋkə"], ["für", "fyːɐ̯"], ["deine", "ˈdaɪ̯nə"], ["Hilfe", "ˈhɪlfə"]], "level": "A1"},
+    {"word": "hallo", "english": "hello", "pos": "interj", "ipa": "haˈloː", "visual": "👋", "de": "Hallo! Wie geht es dir?", "en": "Hello! How are you?", "deIpa": [["Hallo", "haˈloː"], ["Wie", "viː"], ["geht", "ɡeːt"], ["es", "ɛs"], ["dir", "diːɐ̯"]], "level": "A1"},
+    {"word": "Euro", "english": "euro", "pos": "noun", "ipa": "ˈɔɪ̯ʁo", "visual": "💶", "de": "Das kostet zehn Euro.", "en": "That costs ten euros.", "deIpa": [["Das", "das"], ["kostet", "ˈkɔstət"], ["zehn", "tseːn"], ["Euro", "ˈɔɪ̯ʁo"]], "level": "A1"}
   ];
 
   /* ------------------------------------------------------------------
@@ -330,6 +343,27 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
     $('bar').style.width = Math.min(100, pct) + '%';
   }
 
+  function renderSentenceIpa(w) {
+    var box = $('deIpa');
+    if (!box) return;
+
+    var pairs = (w && Array.isArray(w.deIpa)) ? w.deIpa : null;
+    if (!pairs || !pairs.length) {
+      box.innerHTML = '';
+      box.hidden = true;
+      return;
+    }
+
+    var html = '<span class="ipa-label">Word by word</span>';
+    for (var i = 0; i < pairs.length; i++) {
+      var pair = pairs[i];
+      if (!Array.isArray(pair) || pair.length < 2) continue;
+      html += '<span class="tok"><b>' + esc(pair[0]) + '</b> <span class="sym">[' + esc(pair[1]) + ']</span></span>';
+    }
+    box.innerHTML = html;
+    box.hidden = false;
+  }
+
   function render() {
     var w = current();
     if (!w) {
@@ -341,6 +375,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
       $('visual').textContent = '🔍';
       $('de').textContent = '';
       $('en').textContent = '';
+      $('deIpa').innerHTML = '';
+      $('deIpa').hidden = true;
       $('mark').textContent = '✓ I know this';
       $('mark').style.opacity = '1';
       progress();
@@ -356,6 +392,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
     $('visual').textContent = w.visual || '💡';
     $('de').textContent = w.de || '';
     $('en').textContent = w.en || '';
+
+    renderSentenceIpa(w);
 
     var isKnown = learned.has(w.word);
     $('mark').textContent = isKnown ? '✓ Learned' : '✓ I know this';
@@ -519,4 +557,4 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
 })();
 </script>
 </body>
-         </html>
+      </html>
