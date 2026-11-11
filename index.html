@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#102c67">
-<meta name="description" content="A starter German vocabulary trainer with audio, English respelling pronunciation, example sentences, filtering, progress tracking, and quick quizzes.">
-<title>Deutsch 2500 — German Vocabulary Trainer</title>
+<meta name="description" content="German vocabulary starter set with English respelling, audio, example sentences, and quizzes. Building toward 2,500 words.">
+<title>Deutsch 2500 · Starter — German Vocabulary Trainer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102c67'/%3E%3Ctext x='32' y='43' font-family='system-ui,sans-serif' font-size='24' font-weight='800' text-anchor='middle' fill='white'%3EDW%3C/text%3E%3C/svg%3E">
 <style>
 :root{--navy:#102c67;--blue:#1267d5;--cyan:#21b8e7;--ink:#172033;--muted:#667085;--paper:#f4f7fb;--line:#e3e9f2;--green:#17834e}
@@ -14,6 +14,7 @@ body{margin:0;background:var(--paper);font-family:system-ui,-apple-system,Segoe 
 header{background:var(--navy);color:white;padding:18px max(18px,calc((100% - 1050px)/2))}
 .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:22px}
 .brand span{background:white;color:var(--navy);border-radius:12px;padding:6px 9px}
+.brand small{font-weight:600;font-size:13px;background:rgba(255,255,255,.15);padding:3px 9px;border-radius:999px;letter-spacing:.03em}
 header p{margin:7px 0 0;color:#d9e7ff;font-size:14px}
 main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
@@ -55,10 +56,12 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .side h3{margin:0 0 10px}
 .side p{color:var(--muted);line-height:1.5}
 .side .hint{padding:12px;background:#f2f7ff;border-radius:12px;margin:10px 0;font-size:14px;color:var(--ink);line-height:1.55}
-.key{background:#fff8ec;border:1px solid #ffe1b3;border-radius:12px;padding:12px;margin:10px 0;font-size:13px;line-height:1.7}
-.key b{color:var(--navy)}
-.key .k{display:inline-block;background:white;border:1px solid #ffd694;border-radius:6px;padding:1px 6px;font-weight:700;color:var(--ink);margin-right:4px}
-.key .row{margin:3px 0}
+.key{background:#fff8ec;border:1px solid #ffe1b3;border-radius:12px;padding:12px;margin:10px 0;font-size:13px;line-height:1.65}
+.key .krow{display:flex;gap:8px;margin:4px 0;align-items:baseline}
+.key .k{display:inline-block;min-width:52px;background:white;border:1px solid #ffd694;border-radius:6px;padding:1px 6px;font-weight:800;color:var(--navy);text-align:center}
+.key .kd{flex:1}
+.key .soft{color:#17834e;font-weight:700}
+.key .hard{color:#b54708;font-weight:700}
 .list{margin-top:16px}
 .listhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .rows{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -72,13 +75,13 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .choices button{padding:13px;border:1px solid var(--line);border-radius:10px;background:white;text-align:left;cursor:pointer}
 .choices button:hover{background:#eaf2ff}
 .choices button:disabled{cursor:default;opacity:.75}
-footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
+footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-height:1.6}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}.rows{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:10px}.stat b{font-size:19px}}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand"><span>DW</span> Deutsch 2500</div>
+  <div class="brand"><span>DW</span> Deutsch 2500 <small>Starter</small></div>
   <p>See it · hear it · say it · remember it</p>
 </header>
 
@@ -140,25 +143,20 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
       </article>
 
       <aside class="card side">
-        <h3>How to study</h3>
-        <p>Look at the visual, listen to the German pronunciation, then say the word aloud. The blue line under each word shows how to say it in plain English — read it out loud before checking the sentence.</p>
-
-        <div class="hint">
-          <b>Say it like this</b><br>
-          <b>CAPITALS</b> show the stressed syllable: <i>HAH-ben</i>. Everything else is read like normal English.
-        </div>
+        <h3>How to say it</h3>
+        <p>Read the blue line under each word, then listen to the audio. <b>CAPITALS</b> show the stressed syllable.</p>
 
         <div class="key" aria-label="Pronunciation key">
-          <div class="row"><span class="k">kh</span> German <i>ch</i> — soft in <i>ich</i> (like a whispered "y"), throaty in <i>Buch</i> (like "loch")</div>
-          <div class="row"><span class="k">ew</span> <i>ü</i> — say "ee" with rounded lips, like French <i>tu</i></div>
-          <div class="row"><span class="k">ur</span> <i>ö</i> — say "ay" with rounded lips, like <i>fur</i> without the r</div>
-          <div class="row"><span class="k">oy</span> <i>eu / äu</i> — like "boy"</div>
-          <div class="row"><span class="k">eye</span> <i>ei</i> — like "eye"</div>
-          <div class="row"><span class="k">ee</span> <i>ie</i> — like "see"</div>
-          <div class="row"><span class="k">z</span> German <i>z</i> is "ts" — <i>Zeit</i> = "tsite"</div>
-          <div class="row"><span class="k">v</span> German <i>v</i> is "f" — <i>Vogel</i> = "FOH-gel"</div>
-          <div class="row"><span class="k">w</span> German <i>w</i> is "v" — <i>Wasser</i> = "VAH-ser"</div>
-          <div class="row"><span class="k">shp / sht</span> <i>sp / st</i> at the start of a word — <i>Stadt</i> = "shtaht"</div>
+          <div class="krow"><span class="k">kh</span><span class="kd"><span class="soft">SOFT ch</span> — after i, e, ä, ö, ü. Whisper a "y" (ich, nicht, sprechen).</span></div>
+          <div class="krow"><span class="k">KH</span><span class="kd"><span class="hard">THROATY ch</span> — after a, o, u. Like Scottish "loch" (Buch, machen, nach).</span></div>
+          <div class="krow"><span class="k">Ö</span><span class="kd">Say "eh" with rounded lips (schön, können).</span></div>
+          <div class="krow"><span class="k">Ü</span><span class="kd">Say "ee" with rounded lips (müssen, für).</span></div>
+          <div class="krow"><span class="k">tch</span><span class="kd">"ch" as in "church" (Deutsch = DOYTCH).</span></div>
+          <div class="krow"><span class="k">z</span><span class="kd">"ts" (Zeit = TSYTE).</span></div>
+          <div class="krow"><span class="k">v</span><span class="kd">"f" (Vogel = FOH-gul).</span></div>
+          <div class="krow"><span class="k">w</span><span class="kd">"v" (Wasser = VAH-suh).</span></div>
+          <div class="krow"><span class="k">sht/sp</span><span class="kd">"st"/"sp" at start of word (Stadt = shtaht).</span></div>
+          <div class="krow"><span class="k">aa ee oo</span><span class="kd">Double letters = long vowel.</span></div>
         </div>
 
         <p><b>Audio:</b> Uses a German voice on your device. Quality depends on your phone.</p>
@@ -184,7 +182,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
     </div>
   </section>
 
-  <footer>Learning prototype. Pronunciation is written in plain English respelling — CAPITALS mark the stress. Starter set curated for practice; the full 2,500-word frequency-ranked collection is the next content expansion.</footer>
+  <footer>
+    Starter set — 58 curated A1 words. The full 2,500-word frequency-ranked collection is the next milestone.<br>
+    Pronunciation is English respelling for beginners. <b>kh</b> = soft ch, <b>KH</b> = throaty ch, <b>Ö/Ü</b> = rounded vowels (see key).
+  </footer>
 </main>
 
 <noscript>
@@ -196,71 +197,74 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
   'use strict';
 
   /* ------------------------------------------------------------------
-   * Data — pronunciation written in plain English respelling.
-   *   say    = how to say the headword
-   *   deSay  = [word, respelling] pairs for every word in the sentence
-   *            (explicit pairs — no tokenizer, punctuation-safe)
-   * CAPITALS mark the stressed syllable.
+   * Data — pronunciation corrected against Hochdeutsch.
+   *   say   = headword respelling
+   *   deSay = [word, respelling] pairs for each sentence
+   * Convention:
+   *   kh  (lowercase) = SOFT ch (ich, nicht, sprechen) — after i e ä ö ü
+   *   KH  (uppercase) = THROATY ch (Buch, machen, nach) — after a o u
+   *   Ö   = "eh" with rounded lips   |   Ü = "ee" with rounded lips
+   *   CAPITALS = stressed syllable
    * ------------------------------------------------------------------ */
   var starter = [
-    {"word": "ich", "english": "I", "pos": "pron", "say": "ikh", "visual": "👤", "de": "Ich lerne Deutsch.", "en": "I am learning German.", "deSay": [["Ich", "ikh"], ["lerne", "LAIR-nuh"], ["Deutsch", "doitch"]], "level": "A1"},
-    {"word": "du", "english": "you (informal)", "pos": "pron", "say": "doo", "visual": "🫵", "de": "Wie heißt du?", "en": "What is your name?", "deSay": [["Wie", "vee"], ["heißt", "hite"], ["du", "doo"]], "level": "A1"},
-    {"word": "er", "english": "he", "pos": "pron", "say": "air", "visual": "👨", "de": "Er wohnt in Berlin.", "en": "He lives in Berlin.", "deSay": [["Er", "air"], ["wohnt", "vohnt"], ["in", "in"], ["Berlin", "ber-LEEN"]], "level": "A1"},
-    {"word": "sie", "english": "she; they; you (formal)", "pos": "pron", "say": "zee", "visual": "👩", "de": "Sie spricht Deutsch.", "en": "She speaks German.", "deSay": [["Sie", "zee"], ["spricht", "shprikht"], ["Deutsch", "doitch"]], "level": "A1"},
+    {"word": "ich", "english": "I", "pos": "pron", "say": "ikh", "visual": "👤", "de": "Ich lerne Deutsch.", "en": "I am learning German.", "deSay": [["Ich", "ikh"], ["lerne", "LAIR-nuh"], ["Deutsch", "DOYTCH"]], "level": "A1"},
+    {"word": "du", "english": "you (informal)", "pos": "pron", "say": "doo", "visual": "🫵", "de": "Wie heißt du?", "en": "What is your name?", "deSay": [["Wie", "vee"], ["heißt", "HYST"], ["du", "doo"]], "level": "A1"},
+    {"word": "er", "english": "he", "pos": "pron", "say": "ehr", "visual": "👨", "de": "Er wohnt in Berlin.", "en": "He lives in Berlin.", "deSay": [["Er", "ehr"], ["wohnt", "vohnt"], ["in", "in"], ["Berlin", "behr-LEEN"]], "level": "A1"},
+    {"word": "sie", "english": "she; they; you (formal)", "pos": "pron", "say": "zee", "visual": "👩", "de": "Sie spricht Deutsch.", "en": "She speaks German.", "deSay": [["Sie", "zee"], ["spricht", "shprikht"], ["Deutsch", "DOYTCH"]], "level": "A1"},
     {"word": "wir", "english": "we", "pos": "pron", "say": "veer", "visual": "👥", "de": "Wir lernen zusammen.", "en": "We are learning together.", "deSay": [["Wir", "veer"], ["lernen", "LAIR-nen"], ["zusammen", "tsoo-ZAH-men"]], "level": "A1"},
     {"word": "sein", "english": "to be", "pos": "verb", "say": "zine", "visual": "✨", "de": "Ich bin Student.", "en": "I am a student.", "deSay": [["Ich", "ikh"], ["bin", "bin"], ["Student", "shtoo-DENT"]], "level": "A1"},
-    {"word": "haben", "english": "to have", "pos": "verb", "say": "HAH-ben", "visual": "🤲", "de": "Ich habe Zeit.", "en": "I have time.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["Zeit", "tsite"]], "level": "A1"},
-    {"word": "werden", "english": "to become; will", "pos": "verb", "say": "VAIR-den", "visual": "🔄", "de": "Es wird besser.", "en": "It is getting better.", "deSay": [["Es", "es"], ["wird", "veert"], ["besser", "BES-ser"]], "level": "A1"},
-    {"word": "können", "english": "can; to be able to", "pos": "verb", "say": "KUR-nen", "visual": "💪", "de": "Ich kann schwimmen.", "en": "I can swim.", "deSay": [["Ich", "ikh"], ["kann", "kahn"], ["schwimmen", "SHVIM-men"]], "level": "A1"},
-    {"word": "müssen", "english": "must; to have to", "pos": "verb", "say": "MEW-sen", "visual": "❗", "de": "Ich muss arbeiten.", "en": "I have to work.", "deSay": [["Ich", "ikh"], ["muss", "mooss"], ["arbeiten", "AR-bite-en"]], "level": "A1"},
-    {"word": "wollen", "english": "to want", "pos": "verb", "say": "VOL-en", "visual": "🎯", "de": "Wir wollen gehen.", "en": "We want to go.", "deSay": [["Wir", "veer"], ["wollen", "VOL-en"], ["gehen", "GAY-en"]], "level": "A1"},
-    {"word": "machen", "english": "to do; to make", "pos": "verb", "say": "MAH-khen", "visual": "🛠️", "de": "Was machst du heute?", "en": "What are you doing today?", "deSay": [["Was", "vahs"], ["machst", "mahkhst"], ["du", "doo"], ["heute", "HOY-tuh"]], "level": "A1"},
-    {"word": "gehen", "english": "to go; to walk", "pos": "verb", "say": "GAY-en", "visual": "🚶", "de": "Ich gehe nach Hause.", "en": "I am going home.", "deSay": [["Ich", "ikh"], ["gehe", "GAY-uh"], ["nach", "nahkh"], ["Hause", "HOW-zuh"]], "level": "A1"},
-    {"word": "kommen", "english": "to come", "pos": "verb", "say": "KOM-en", "visual": "🚶", "de": "Kommst du morgen?", "en": "Are you coming tomorrow?", "deSay": [["Kommst", "komst"], ["du", "doo"], ["morgen", "MOR-gen"]], "level": "A1"},
+    {"word": "haben", "english": "to have", "pos": "verb", "say": "HAH-buhn", "visual": "🤲", "de": "Ich habe Zeit.", "en": "I have time.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["Zeit", "TSYTE"]], "level": "A1"},
+    {"word": "werden", "english": "to become; will", "pos": "verb", "say": "VEHR-duhn", "visual": "🔄", "de": "Es wird besser.", "en": "It is getting better.", "deSay": [["Es", "es"], ["wird", "virt"], ["besser", "BESS-suh"]], "level": "A1"},
+    {"word": "können", "english": "can; to be able to", "pos": "verb", "say": "KÖN-nen", "visual": "💪", "de": "Ich kann schwimmen.", "en": "I can swim.", "deSay": [["Ich", "ikh"], ["kann", "kan"], ["schwimmen", "SHVIM-men"]], "level": "A1"},
+    {"word": "müssen", "english": "must; to have to", "pos": "verb", "say": "MÜS-sen", "visual": "❗", "de": "Ich muss arbeiten.", "en": "I have to work.", "deSay": [["Ich", "ikh"], ["muss", "muss"], ["arbeiten", "AR-bye-tn"]], "level": "A1"},
+    {"word": "wollen", "english": "to want", "pos": "verb", "say": "VOL-len", "visual": "🎯", "de": "Wir wollen gehen.", "en": "We want to go.", "deSay": [["Wir", "veer"], ["wollen", "VOL-len"], ["gehen", "GEH-en"]], "level": "A1"},
+    {"word": "machen", "english": "to do; to make", "pos": "verb", "say": "MAH-KHuhn", "visual": "🛠️", "de": "Was machst du heute?", "en": "What are you doing today?", "deSay": [["Was", "vahs"], ["machst", "mahKHst"], ["du", "doo"], ["heute", "HOY-tuh"]], "level": "A1"},
+    {"word": "gehen", "english": "to go; to walk", "pos": "verb", "say": "GEH-en", "visual": "🚶", "de": "Ich gehe nach Hause.", "en": "I am going home.", "deSay": [["Ich", "ikh"], ["gehe", "GEH-uh"], ["nach", "nahKH"], ["Hause", "HOW-zuh"]], "level": "A1"},
+    {"word": "kommen", "english": "to come", "pos": "verb", "say": "KOM-men", "visual": "🚶", "de": "Kommst du morgen?", "en": "Are you coming tomorrow?", "deSay": [["Kommst", "komst"], ["du", "doo"], ["morgen", "MOR-gen"]], "level": "A1"},
     {"word": "sagen", "english": "to say; to tell", "pos": "verb", "say": "ZAH-gen", "visual": "🗣️", "de": "Was soll ich sagen?", "en": "What should I say?", "deSay": [["Was", "vahs"], ["soll", "zol"], ["ich", "ikh"], ["sagen", "ZAH-gen"]], "level": "A1"},
-    {"word": "wissen", "english": "to know (a fact)", "pos": "verb", "say": "VIS-en", "visual": "🧠", "de": "Ich weiß es nicht.", "en": "I don't know.", "deSay": [["Ich", "ikh"], ["weiß", "vite"], ["es", "es"], ["nicht", "nikht"]], "level": "A1"},
-    {"word": "sehen", "english": "to see", "pos": "verb", "say": "ZAY-en", "visual": "👀", "de": "Ich sehe einen Vogel.", "en": "I see a bird.", "deSay": [["Ich", "ikh"], ["sehe", "ZAY-uh"], ["einen", "EYE-nen"], ["Vogel", "FOH-gel"]], "level": "A1"},
-    {"word": "geben", "english": "to give", "pos": "verb", "say": "GAY-ben", "visual": "🎁", "de": "Gib mir bitte das Buch.", "en": "Please give me the book.", "deSay": [["Gib", "geeb"], ["mir", "meer"], ["bitte", "BIT-tuh"], ["das", "dahs"], ["Buch", "bookh"]], "level": "A1"},
-    {"word": "nehmen", "english": "to take", "pos": "verb", "say": "NAY-men", "visual": "🤲", "de": "Ich nehme den Bus.", "en": "I take the bus.", "deSay": [["Ich", "ikh"], ["nehme", "NAY-muh"], ["den", "dane"], ["Bus", "booss"]], "level": "A1"},
+    {"word": "wissen", "english": "to know (a fact)", "pos": "verb", "say": "VIS-sen", "visual": "🧠", "de": "Ich weiß es nicht.", "en": "I don't know.", "deSay": [["Ich", "ikh"], ["weiß", "VICE"], ["es", "es"], ["nicht", "nikht"]], "level": "A1"},
+    {"word": "sehen", "english": "to see", "pos": "verb", "say": "ZEH-en", "visual": "👀", "de": "Ich sehe einen Vogel.", "en": "I see a bird.", "deSay": [["Ich", "ikh"], ["sehe", "ZEH-uh"], ["einen", "EYE-nen"], ["Vogel", "FOH-gul"]], "level": "A1"},
+    {"word": "geben", "english": "to give", "pos": "verb", "say": "GEH-ben", "visual": "🎁", "de": "Gib mir bitte das Buch.", "en": "Please give me the book.", "deSay": [["Gib", "gip"], ["mir", "meer"], ["bitte", "BIT-tuh"], ["das", "dahs"], ["Buch", "BOOKH"]], "level": "A1"},
+    {"word": "nehmen", "english": "to take", "pos": "verb", "say": "NEH-men", "visual": "🤲", "de": "Ich nehme den Bus.", "en": "I take the bus.", "deSay": [["Ich", "ikh"], ["nehme", "NEH-muh"], ["den", "dehn"], ["Bus", "buss"]], "level": "A1"},
     {"word": "sprechen", "english": "to speak", "pos": "verb", "say": "SHPREH-khen", "visual": "💬", "de": "Sprechen Sie Englisch?", "en": "Do you speak English?", "deSay": [["Sprechen", "SHPREH-khen"], ["Sie", "zee"], ["Englisch", "ENG-lish"]], "level": "A1"},
-    {"word": "gut", "english": "good", "pos": "adj", "say": "goot", "visual": "👍", "de": "Das ist sehr gut.", "en": "That is very good.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["sehr", "zair"], ["gut", "goot"]], "level": "A1"},
+    {"word": "gut", "english": "good", "pos": "adj", "say": "goot", "visual": "👍", "de": "Das ist sehr gut.", "en": "That is very good.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["sehr", "zehr"], ["gut", "goot"]], "level": "A1"},
     {"word": "groß", "english": "big; tall", "pos": "adj", "say": "grohss", "visual": "📏", "de": "Das Haus ist groß.", "en": "The house is big.", "deSay": [["Das", "dahs"], ["Haus", "howss"], ["ist", "ist"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "klein", "english": "small", "pos": "adj", "say": "kline", "visual": "🐜", "de": "Der Hund ist klein.", "en": "The dog is small.", "deSay": [["Der", "dair"], ["Hund", "hoont"], ["ist", "ist"], ["klein", "kline"]], "level": "A1"},
+    {"word": "klein", "english": "small", "pos": "adj", "say": "kline", "visual": "🐜", "de": "Der Hund ist klein.", "en": "The dog is small.", "deSay": [["Der", "dehr"], ["Hund", "hunt"], ["ist", "ist"], ["klein", "kline"]], "level": "A1"},
     {"word": "neu", "english": "new", "pos": "adj", "say": "noy", "visual": "🆕", "de": "Ich habe ein neues Handy.", "en": "I have a new phone.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["ein", "ine"], ["neues", "NOY-es"], ["Handy", "HEN-dee"]], "level": "A1"},
-    {"word": "schön", "english": "beautiful; nice", "pos": "adj", "say": "shurn", "visual": "🌷", "de": "Das ist ein schöner Tag.", "en": "It is a beautiful day.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["ein", "ine"], ["schöner", "SHUR-ner"], ["Tag", "tahk"]], "level": "A1"},
-    {"word": "wichtig", "english": "important", "pos": "adj", "say": "VIKH-tikh", "visual": "⭐", "de": "Deutsch ist wichtig für mich.", "en": "German is important to me.", "deSay": [["Deutsch", "doitch"], ["ist", "ist"], ["wichtig", "VIKH-tikh"], ["für", "fewr"], ["mich", "mikh"]], "level": "A1"},
-    {"word": "der Mann", "english": "man", "pos": "noun", "say": "dair mahn", "visual": "👨", "de": "Der Mann arbeitet hier.", "en": "The man works here.", "deSay": [["Der", "dair"], ["Mann", "mahn"], ["arbeitet", "AR-bite-et"], ["hier", "heer"]], "level": "A1"},
-    {"word": "die Frau", "english": "woman", "pos": "noun", "say": "dee frow", "visual": "👩", "de": "Die Frau liest ein Buch.", "en": "The woman is reading a book.", "deSay": [["Die", "dee"], ["Frau", "frow"], ["liest", "leest"], ["ein", "ine"], ["Buch", "bookh"]], "level": "A1"},
+    {"word": "schön", "english": "beautiful; nice", "pos": "adj", "say": "SHÖN", "visual": "🌷", "de": "Das ist ein schöner Tag.", "en": "It is a beautiful day.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["ein", "ine"], ["schöner", "SHÖ-ner"], ["Tag", "tahk"]], "level": "A1"},
+    {"word": "wichtig", "english": "important", "pos": "adj", "say": "VIkh-tikh", "visual": "⭐", "de": "Deutsch ist wichtig für mich.", "en": "German is important to me.", "deSay": [["Deutsch", "DOYTCH"], ["ist", "ist"], ["wichtig", "VIkh-tikh"], ["für", "FÜÜR"], ["mich", "mikh"]], "level": "A1"},
+    {"word": "der Mann", "english": "man", "pos": "noun", "say": "dehr mahn", "visual": "👨", "de": "Der Mann arbeitet hier.", "en": "The man works here.", "deSay": [["Der", "dehr"], ["Mann", "mahn"], ["arbeitet", "AR-bye-tuht"], ["hier", "heer"]], "level": "A1"},
+    {"word": "die Frau", "english": "woman", "pos": "noun", "say": "dee frow", "visual": "👩", "de": "Die Frau liest ein Buch.", "en": "The woman is reading a book.", "deSay": [["Die", "dee"], ["Frau", "frow"], ["liest", "leest"], ["ein", "ine"], ["Buch", "BOOKH"]], "level": "A1"},
     {"word": "das Kind", "english": "child", "pos": "noun", "say": "dahs kint", "visual": "🧒", "de": "Das Kind spielt draußen.", "en": "The child is playing outside.", "deSay": [["Das", "dahs"], ["Kind", "kint"], ["spielt", "shpeelt"], ["draußen", "DROW-sen"]], "level": "A1"},
     {"word": "die Familie", "english": "family", "pos": "noun", "say": "dee fah-MEE-lee-uh", "visual": "👨‍👩‍👧", "de": "Meine Familie ist groß.", "en": "My family is big.", "deSay": [["Meine", "MINE-uh"], ["Familie", "fah-MEE-lee-uh"], ["ist", "ist"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "das Haus", "english": "house", "pos": "noun", "say": "dahs howss", "visual": "🏠", "de": "Das Haus ist sehr alt.", "en": "The house is very old.", "deSay": [["Das", "dahs"], ["Haus", "howss"], ["ist", "ist"], ["sehr", "zair"], ["alt", "ahlt"]], "level": "A1"},
-    {"word": "die Schule", "english": "school", "pos": "noun", "say": "dee SHOO-luh", "visual": "🏫", "de": "Die Schule beginnt um acht.", "en": "School starts at eight.", "deSay": [["Die", "dee"], ["Schule", "SHOO-luh"], ["beginnt", "buh-GINT"], ["um", "oom"], ["acht", "ahkht"]], "level": "A1"},
-    {"word": "das Buch", "english": "book", "pos": "noun", "say": "dahs bookh", "visual": "📘", "de": "Ich lese ein Buch.", "en": "I am reading a book.", "deSay": [["Ich", "ikh"], ["lese", "LAY-zuh"], ["ein", "ine"], ["Buch", "bookh"]], "level": "A1"},
-    {"word": "der Fisch", "english": "fish", "pos": "noun", "say": "dair fish", "visual": "🐟", "de": "Der Fisch schwimmt im Wasser.", "en": "The fish is swimming in the water.", "deSay": [["Der", "dair"], ["Fisch", "fish"], ["schwimmt", "shvimt"], ["im", "im"], ["Wasser", "VAH-ser"]], "level": "A1"},
-    {"word": "das Wasser", "english": "water", "pos": "noun", "say": "dahs VAH-ser", "visual": "💧", "de": "Ich trinke Wasser.", "en": "I drink water.", "deSay": [["Ich", "ikh"], ["trinke", "TRIN-kuh"], ["Wasser", "VAH-ser"]], "level": "A1"},
+    {"word": "das Haus", "english": "house", "pos": "noun", "say": "dahs howss", "visual": "🏠", "de": "Das Haus ist sehr alt.", "en": "The house is very old.", "deSay": [["Das", "dahs"], ["Haus", "howss"], ["ist", "ist"], ["sehr", "zehr"], ["alt", "ahlt"]], "level": "A1"},
+    {"word": "die Schule", "english": "school", "pos": "noun", "say": "dee SHOO-luh", "visual": "🏫", "de": "Die Schule beginnt um acht.", "en": "School starts at eight.", "deSay": [["Die", "dee"], ["Schule", "SHOO-luh"], ["beginnt", "buh-GINT"], ["um", "um"], ["acht", "ahKHt"]], "level": "A1"},
+    {"word": "das Buch", "english": "book", "pos": "noun", "say": "dahs BOOKH", "visual": "📘", "de": "Ich lese ein Buch.", "en": "I am reading a book.", "deSay": [["Ich", "ikh"], ["lese", "LEH-zuh"], ["ein", "ine"], ["Buch", "BOOKH"]], "level": "A1"},
+    {"word": "der Fisch", "english": "fish", "pos": "noun", "say": "dehr fish", "visual": "🐟", "de": "Der Fisch schwimmt im Wasser.", "en": "The fish is swimming in the water.", "deSay": [["Der", "dehr"], ["Fisch", "fish"], ["schwimmt", "shvimt"], ["im", "im"], ["Wasser", "VAH-suh"]], "level": "A1"},
+    {"word": "das Wasser", "english": "water", "pos": "noun", "say": "dahs VAH-suh", "visual": "💧", "de": "Ich trinke Wasser.", "en": "I drink water.", "deSay": [["Ich", "ikh"], ["trinke", "TRIN-kuh"], ["Wasser", "VAH-suh"]], "level": "A1"},
     {"word": "das Brot", "english": "bread", "pos": "noun", "say": "dahs broht", "visual": "🍞", "de": "Wir kaufen Brot.", "en": "We are buying bread.", "deSay": [["Wir", "veer"], ["kaufen", "KOW-fen"], ["Brot", "broht"]], "level": "A1"},
-    {"word": "der Apfel", "english": "apple", "pos": "noun", "say": "dair AHP-fel", "visual": "🍎", "de": "Der Apfel ist rot.", "en": "The apple is red.", "deSay": [["Der", "dair"], ["Apfel", "AHP-fel"], ["ist", "ist"], ["rot", "roht"]], "level": "A1"},
-    {"word": "die Zeit", "english": "time", "pos": "noun", "say": "dee tsite", "visual": "⏰", "de": "Ich habe heute keine Zeit.", "en": "I have no time today.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["heute", "HOY-tuh"], ["keine", "KINE-uh"], ["Zeit", "tsite"]], "level": "A1"},
-    {"word": "der Tag", "english": "day", "pos": "noun", "say": "dair tahk", "visual": "🌞", "de": "Guten Tag!", "en": "Good afternoon!", "deSay": [["Guten", "GOO-ten"], ["Tag", "tahk"]], "level": "A1"},
-    {"word": "die Arbeit", "english": "work; job", "pos": "noun", "say": "dee AR-bite", "visual": "💼", "de": "Meine Arbeit beginnt um neun.", "en": "My work starts at nine.", "deSay": [["Meine", "MINE-uh"], ["Arbeit", "AR-bite"], ["beginnt", "buh-GINT"], ["um", "oom"], ["neun", "noyn"]], "level": "A1"},
-    {"word": "die Stadt", "english": "city", "pos": "noun", "say": "dee shtaht", "visual": "🏙️", "de": "Die Stadt ist sehr groß.", "en": "The city is very big.", "deSay": [["Die", "dee"], ["Stadt", "shtaht"], ["ist", "ist"], ["sehr", "zair"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "heute", "english": "today", "pos": "adv", "say": "HOY-tuh", "visual": "📅", "de": "Heute lerne ich Deutsch.", "en": "Today I am learning German.", "deSay": [["Heute", "HOY-tuh"], ["lerne", "LAIR-nuh"], ["ich", "ikh"], ["Deutsch", "doitch"]], "level": "A1"},
-    {"word": "morgen", "english": "tomorrow; morning", "pos": "adv", "say": "MOR-gen", "visual": "🌅", "de": "Morgen habe ich Zeit.", "en": "Tomorrow I have time.", "deSay": [["Morgen", "MOR-gen"], ["habe", "HAH-buh"], ["ich", "ikh"], ["Zeit", "tsite"]], "level": "A1"},
-    {"word": "jetzt", "english": "now", "pos": "adv", "say": "yetst", "visual": "⏱️", "de": "Ich muss jetzt gehen.", "en": "I have to go now.", "deSay": [["Ich", "ikh"], ["muss", "mooss"], ["jetzt", "yetst"], ["gehen", "GAY-en"]], "level": "A1"},
-    {"word": "immer", "english": "always", "pos": "adv", "say": "IM-mer", "visual": "🔁", "de": "Er kommt immer pünktlich.", "en": "He is always on time.", "deSay": [["Er", "air"], ["kommt", "komt"], ["immer", "IM-mer"], ["pünktlich", "PEWNK-tlikh"]], "level": "A1"},
-    {"word": "nicht", "english": "not", "pos": "part", "say": "nikht", "visual": "🚫", "de": "Ich verstehe das nicht.", "en": "I do not understand that.", "deSay": [["Ich", "ikh"], ["verstehe", "fair-SHTAY-uh"], ["das", "dahs"], ["nicht", "nikht"]], "level": "A1"},
-    {"word": "und", "english": "and", "pos": "conj", "say": "oont", "visual": "➕", "de": "Du und ich lernen Deutsch.", "en": "You and I are learning German.", "deSay": [["Du", "doo"], ["und", "oont"], ["ich", "ikh"], ["lernen", "LAIR-nen"], ["Deutsch", "doitch"]], "level": "A1"},
-    {"word": "aber", "english": "but", "pos": "conj", "say": "AH-ber", "visual": "↔️", "de": "Ich bin müde, aber glücklich.", "en": "I am tired but happy.", "deSay": [["Ich", "ikh"], ["bin", "bin"], ["müde", "MEW-duh"], ["aber", "AH-ber"], ["glücklich", "GLEWK-likh"]], "level": "A1"},
+    {"word": "der Apfel", "english": "apple", "pos": "noun", "say": "dehr AHP-fel", "visual": "🍎", "de": "Der Apfel ist rot.", "en": "The apple is red.", "deSay": [["Der", "dehr"], ["Apfel", "AHP-fel"], ["ist", "ist"], ["rot", "roht"]], "level": "A1"},
+    {"word": "die Zeit", "english": "time", "pos": "noun", "say": "dee TSYTE", "visual": "⏰", "de": "Ich habe heute keine Zeit.", "en": "I have no time today.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["heute", "HOY-tuh"], ["keine", "KINE-uh"], ["Zeit", "TSYTE"]], "level": "A1"},
+    {"word": "der Tag", "english": "day", "pos": "noun", "say": "dehr tahk", "visual": "🌞", "de": "Guten Tag!", "en": "Good afternoon!", "deSay": [["Guten", "GOO-ten"], ["Tag", "tahk"]], "level": "A1"},
+    {"word": "die Arbeit", "english": "work; job", "pos": "noun", "say": "dee AR-bite", "visual": "💼", "de": "Meine Arbeit beginnt um neun.", "en": "My work starts at nine.", "deSay": [["Meine", "MINE-uh"], ["Arbeit", "AR-bite"], ["beginnt", "buh-GINT"], ["um", "um"], ["neun", "noyn"]], "level": "A1"},
+    {"word": "die Stadt", "english": "city", "pos": "noun", "say": "dee shtaht", "visual": "🏙️", "de": "Die Stadt ist sehr groß.", "en": "The city is very big.", "deSay": [["Die", "dee"], ["Stadt", "shtaht"], ["ist", "ist"], ["sehr", "zehr"], ["groß", "grohss"]], "level": "A1"},
+    {"word": "heute", "english": "today", "pos": "adv", "say": "HOY-tuh", "visual": "📅", "de": "Heute lerne ich Deutsch.", "en": "Today I am learning German.", "deSay": [["Heute", "HOY-tuh"], ["lerne", "LAIR-nuh"], ["ich", "ikh"], ["Deutsch", "DOYTCH"]], "level": "A1"},
+    {"word": "morgen", "english": "tomorrow; morning", "pos": "adv", "say": "MOR-gen", "visual": "🌅", "de": "Morgen habe ich Zeit.", "en": "Tomorrow I have time.", "deSay": [["Morgen", "MOR-gen"], ["habe", "HAH-buh"], ["ich", "ikh"], ["Zeit", "TSYTE"]], "level": "A1"},
+    {"word": "jetzt", "english": "now", "pos": "adv", "say": "yetst", "visual": "⏱️", "de": "Ich muss jetzt gehen.", "en": "I have to go now.", "deSay": [["Ich", "ikh"], ["muss", "muss"], ["jetzt", "yetst"], ["gehen", "GEH-en"]], "level": "A1"},
+    {"word": "immer", "english": "always", "pos": "adv", "say": "IM-muh", "visual": "🔁", "de": "Er kommt immer pünktlich.", "en": "He is always on time.", "deSay": [["Er", "ehr"], ["kommt", "komt"], ["immer", "IM-muh"], ["pünktlich", "PÜNGKT-likh"]], "level": "A1"},
+    {"word": "nicht", "english": "not", "pos": "part", "say": "nikht", "visual": "🚫", "de": "Ich verstehe das nicht.", "en": "I do not understand that.", "deSay": [["Ich", "ikh"], ["verstehe", "fehr-SHTEH-uh"], ["das", "dahs"], ["nicht", "nikht"]], "level": "A1"},
+    {"word": "und", "english": "and", "pos": "conj", "say": "unt", "visual": "➕", "de": "Du und ich lernen Deutsch.", "en": "You and I are learning German.", "deSay": [["Du", "doo"], ["und", "unt"], ["ich", "ikh"], ["lernen", "LAIR-nen"], ["Deutsch", "DOYTCH"]], "level": "A1"},
+    {"word": "aber", "english": "but", "pos": "conj", "say": "AH-buh", "visual": "↔️", "de": "Ich bin müde, aber glücklich.", "en": "I am tired but happy.", "deSay": [["Ich", "ikh"], ["bin", "bin"], ["müde", "MÜ-duh"], ["aber", "AH-buh"], ["glücklich", "GLÜK-likh"]], "level": "A1"},
     {"word": "mit", "english": "with", "pos": "prep", "say": "mit", "visual": "🤝", "de": "Ich komme mit dir.", "en": "I am coming with you.", "deSay": [["Ich", "ikh"], ["komme", "KOM-muh"], ["mit", "mit"], ["dir", "deer"]], "level": "A1"},
-    {"word": "für", "english": "for", "pos": "prep", "say": "fewr", "visual": "🎁", "de": "Das Geschenk ist für dich.", "en": "The gift is for you.", "deSay": [["Das", "dahs"], ["Geschenk", "guh-SHENK"], ["ist", "ist"], ["für", "fewr"], ["dich", "dikh"]], "level": "A1"},
+    {"word": "für", "english": "for", "pos": "prep", "say": "FÜÜR", "visual": "🎁", "de": "Das Geschenk ist für dich.", "en": "The gift is for you.", "deSay": [["Das", "dahs"], ["Geschenk", "guh-SHENK"], ["ist", "ist"], ["für", "FÜÜR"], ["dich", "dikh"]], "level": "A1"},
     {"word": "in", "english": "in; into", "pos": "prep", "say": "in", "visual": "📍", "de": "Ich wohne in Uganda.", "en": "I live in Uganda.", "deSay": [["Ich", "ikh"], ["wohne", "VOH-nuh"], ["in", "in"], ["Uganda", "oo-GAHN-dah"]], "level": "A1"},
-    {"word": "auf", "english": "on; onto", "pos": "prep", "say": "owf", "visual": "⬆️", "de": "Das Buch liegt auf dem Tisch.", "en": "The book is on the table.", "deSay": [["Das", "dahs"], ["Buch", "bookh"], ["liegt", "leekt"], ["auf", "owf"], ["dem", "dame"], ["Tisch", "tish"]], "level": "A1"},
-    {"word": "ja", "english": "yes", "pos": "part", "say": "yah", "visual": "✅", "de": "Ja, ich verstehe.", "en": "Yes, I understand.", "deSay": [["Ja", "yah"], ["ich", "ikh"], ["verstehe", "fair-SHTAY-uh"]], "level": "A1"},
+    {"word": "auf", "english": "on; onto", "pos": "prep", "say": "owf", "visual": "⬆️", "de": "Das Buch liegt auf dem Tisch.", "en": "The book is on the table.", "deSay": [["Das", "dahs"], ["Buch", "BOOKH"], ["liegt", "leekt"], ["auf", "owf"], ["dem", "dehm"], ["Tisch", "tish"]], "level": "A1"},
+    {"word": "ja", "english": "yes", "pos": "part", "say": "yah", "visual": "✅", "de": "Ja, ich verstehe.", "en": "Yes, I understand.", "deSay": [["Ja", "yah"], ["ich", "ikh"], ["verstehe", "fehr-SHTEH-uh"]], "level": "A1"},
     {"word": "nein", "english": "no", "pos": "part", "say": "nine", "visual": "❌", "de": "Nein, heute nicht.", "en": "No, not today.", "deSay": [["Nein", "nine"], ["heute", "HOY-tuh"], ["nicht", "nikht"]], "level": "A1"},
-    {"word": "bitte", "english": "please; you're welcome", "pos": "part", "say": "BIT-tuh", "visual": "🙏", "de": "Ein Wasser, bitte.", "en": "A water, please.", "deSay": [["Ein", "ine"], ["Wasser", "VAH-ser"], ["bitte", "BIT-tuh"]], "level": "A1"},
-    {"word": "danke", "english": "thank you", "pos": "part", "say": "DAHN-kuh", "visual": "💛", "de": "Danke für deine Hilfe.", "en": "Thank you for your help.", "deSay": [["Danke", "DAHN-kuh"], ["für", "fewr"], ["deine", "DINE-uh"], ["Hilfe", "HIL-fuh"]], "level": "A1"},
+    {"word": "bitte", "english": "please; you're welcome", "pos": "part", "say": "BIT-tuh", "visual": "🙏", "de": "Ein Wasser, bitte.", "en": "A water, please.", "deSay": [["Ein", "ine"], ["Wasser", "VAH-suh"], ["bitte", "BIT-tuh"]], "level": "A1"},
+    {"word": "danke", "english": "thank you", "pos": "part", "say": "DAHNG-kuh", "visual": "💛", "de": "Danke für deine Hilfe.", "en": "Thank you for your help.", "deSay": [["Danke", "DAHNG-kuh"], ["für", "FÜÜR"], ["deine", "DINE-uh"], ["Hilfe", "HIL-fuh"]], "level": "A1"},
     {"word": "hallo", "english": "hello", "pos": "interj", "say": "hah-LOH", "visual": "👋", "de": "Hallo! Wie geht es dir?", "en": "Hello! How are you?", "deSay": [["Hallo", "hah-LOH"], ["Wie", "vee"], ["geht", "gayt"], ["es", "es"], ["dir", "deer"]], "level": "A1"},
-    {"word": "Euro", "english": "euro", "pos": "noun", "say": "OY-roh", "visual": "💶", "de": "Das kostet zehn Euro.", "en": "That costs ten euros.", "deSay": [["Das", "dahs"], ["kostet", "KOS-tet"], ["zehn", "tsayn"], ["Euro", "OY-roh"]], "level": "A1"}
+    {"word": "Euro", "english": "euro", "pos": "noun", "say": "OY-roh", "visual": "💶", "de": "Das kostet zehn Euro.", "en": "That costs ten euros.", "deSay": [["Das", "dahs"], ["kostet", "KOS-tuht"], ["zehn", "tsehn"], ["Euro", "OY-roh"]], "level": "A1"}
   ];
 
   /* ------------------------------------------------------------------
@@ -576,4 +580,4 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0}
 })();
 </script>
 </body>
-        </html>
+  </html>
