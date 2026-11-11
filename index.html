@@ -180,7 +180,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       <div class="quizprompt" id="qword">—</div>
       <div class="choices" id="choices"></div>
       <p id="feedback" aria-live="polite"></p>
-      <button type="button" class="audio secondary" id="newQuiz">Next word →</button>
+      <div class="actions" style="margin-top: 15px">
+        <button type="button" class="next" id="newQuiz">Next word →</button>
+        <button type="button" class="unknown" id="retryQuiz" style="display:none">↻ Try again</button>
+      </div>
     </div>
   </section>
 
@@ -192,6 +195,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       <div class="actions" style="margin-top: 15px">
         <button type="button" class="next" id="checkWrite">Check answer</button>
         <button type="button" class="audio secondary" id="nextWrite" style="display:none">Next sentence →</button>
+        <button type="button" class="unknown" id="retryWrite" style="display:none">↻ Try again</button>
       </div>
       <p id="writeFeedback" class="write-feedback" aria-live="polite"></p>
       <p id="writeCorrect" style="margin-top:8px; color:var(--muted); font-weight:500; display:none;"></p>
@@ -281,10 +285,15 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   ];
 
   var STORAGE_KEY = 'deutsch2500learned';
+  var STORAGE_KEY_QUIZ = 'deutsch2500quiz';
+  var STORAGE_KEY_WRITE = 'deutsch2500write';
+  
   var words = starter.slice();
   var filtered = words.slice();
   var index = 0;
   var learned = loadLearned();
+  var passedQuiz = loadSet(STORAGE_KEY_QUIZ);
+  var passedWrite = loadSet(STORAGE_KEY_WRITE);
   var currentWriteWord = null;
 
   var $ = function (id) { return document.getElementById(id); };
@@ -303,6 +312,22 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     } catch (e) {
       return new Set();
     }
+  }
+
+  function loadSet(key) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      var arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveSet(key, set) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(Array.from(set)));
+    } catch (e) { /* ignore */ }
   }
 
   function saveLearned() {
@@ -590,7 +615,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   /* ----------------------------------------------------------------
-   * Quiz Module - locked to current word
+   * Quiz Module
    * ---------------------------------------------------------------- */
   function newQuestion() {
     var target = current();
@@ -614,16 +639,35 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
     $('qword').textContent = answer.word;
     $('feedback').textContent = '';
+    $('feedback').style.color = '';
     $('choices').innerHTML = options.map(function (o) {
       return '<button type="button">' + esc(o.english) + '</button>';
     }).join('');
 
+    $('retryQuiz').style.display = 'none';
+    $('newQuiz').style.display = 'inline-block';
+
+    if (passedQuiz.has(answer.word)) {
+      $('feedback').textContent = '⭐ Previously passed!';
+      $('feedback').style.color = 'var(--green)';
+    }
+
     Array.prototype.forEach.call($('choices').querySelectorAll('button'), function (btn, i) {
       btn.onclick = function () {
         var correct = options[i] === answer;
-        $('feedback').textContent = correct
-          ? '✓ Correct!'
-          : 'Not quite — ' + answer.word + ' means ' + answer.english + '.';
+        
+        if (correct) {
+          passedQuiz.add(answer.word);
+          saveSet(STORAGE_KEY_QUIZ, passedQuiz);
+          $('feedback').textContent = '✓ Passed! Correct.';
+          $('feedback').style.color = 'var(--green)';
+          $('retryQuiz').style.display = 'none';
+        } else {
+          $('feedback').textContent = '❌ Not quite. Try again!';
+          $('feedback').style.color = '#b42318';
+          $('retryQuiz').style.display = 'inline-block';
+        }
+        
         Array.prototype.forEach.call($('choices').querySelectorAll('button'), function (b) {
           b.disabled = true;
         });
@@ -632,7 +676,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   /* ----------------------------------------------------------------
-   * Writing Module - locked to current word
+   * Writing Module
    * ---------------------------------------------------------------- */
   function newWritingPrompt() {
     var target = current();
@@ -646,11 +690,17 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     $('writeFeedback').textContent = '';
     $('writeFeedback').style.color = '';
     $('writeCorrect').style.display = 'none';
-    $('nextWrite').style.display = 'none';
     
-    // Show Check button, enable it
+    // Setup buttons
     $('checkWrite').disabled = false;
     $('checkWrite').style.display = 'inline-block';
+    $('nextWrite').style.display = 'none';
+    $('retryWrite').style.display = 'none';
+    
+    if (passedWrite.has(currentWriteWord.word)) {
+      $('writeFeedback').textContent = '⭐ Previously passed!';
+      $('writeFeedback').style.color = 'var(--green)';
+    }
     
     // Focus the input so the user can type immediately
     $('writeInput').focus();
@@ -674,18 +724,29 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     correctEl.style.display = 'block';
 
     // Perform assessment
+    var isPassed = false;
     if (userInput === correct) {
-      feedbackEl.textContent = '✓ Perfect! Exact match.';
+      feedbackEl.textContent = '✓ Passed! Perfect exact match.';
       feedbackEl.style.color = 'var(--green)';
+      isPassed = true;
     } else if (normUser === normCorrect) {
-      feedbackEl.textContent = '✓ Correct! (Check your punctuation)';
+      feedbackEl.textContent = '✓ Passed! (Check your punctuation)';
       feedbackEl.style.color = 'var(--green)';
+      isPassed = true;
     } else if (normUser.toLowerCase() === normCorrect.toLowerCase()) {
       feedbackEl.textContent = '⚠️ Almost! Check your capital letters (German nouns are capitalized).';
       feedbackEl.style.color = '#b54708'; // orange
     } else {
       feedbackEl.textContent = '❌ Not quite. Keep practising!';
       feedbackEl.style.color = '#b42318'; // red
+    }
+
+    if (isPassed) {
+      passedWrite.add(currentWriteWord.word);
+      saveSet(STORAGE_KEY_WRITE, passedWrite);
+      $('retryWrite').style.display = 'none';
+    } else {
+      $('retryWrite').style.display = 'inline-block';
     }
 
     // Lock UI, show Next button
@@ -722,7 +783,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     render();
   };
 
-  // Quiz view events - Now advances the master index
+  // Quiz view events
+  $('retryQuiz').onclick = function () {
+    newQuestion(); // Resets options and feedback for the same word
+  };
   $('newQuiz').onclick = function () {
     if (!filtered.length) return;
     index = (index + 1) % filtered.length;
@@ -730,14 +794,23 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     newQuestion();
   };
 
-  // Write view events - Now advances the master index
+  // Write view events
+  $('retryWrite').onclick = function () {
+    $('writeInput').value = '';
+    $('writeFeedback').textContent = '';
+    $('writeCorrect').style.display = 'none';
+    $('retryWrite').style.display = 'none';
+    $('nextWrite').style.display = 'none';
+    $('checkWrite').disabled = false;
+    $('checkWrite').style.display = 'inline-block';
+    $('writeInput').focus();
+  };
   $('nextWrite').onclick = function () {
     if (!filtered.length) return;
     index = (index + 1) % filtered.length;
     render();
     newWritingPrompt();
   };
-  
   $('checkWrite').onclick = checkWriting;
   
   $('writeInput').addEventListener('keypress', function (e) {
