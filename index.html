@@ -4,9 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#102c67">
-<meta name="description" content="German vocabulary starter set with English respelling, audio, example sentences, quizzes, and writing practice.">
+<meta name="description" content="German vocabulary trainer with audio, quizzes, writing practice, and an AI tutor.">
 <title>Deutsch 2500 · Starter — German Vocabulary Trainer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102c67'/%3E%3Ctext x='32' y='43' font-family='system-ui,sans-serif' font-size='24' font-weight='800' text-anchor='middle' fill='white'%3EDW%3C/text%3E%3C/svg%3E">
+<!-- Puter.js for the AI Tutor -->
+<script src="https://js.puter.com/v2/"></script>
 <style>
 :root{--navy:#102c67;--blue:#1267d5;--cyan:#21b8e7;--ink:#172033;--muted:#667085;--paper:#f4f7fb;--line:#e3e9f2;--green:#17834e}
 *{box-sizing:border-box}
@@ -84,6 +86,27 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .write-feedback{margin-top:15px;font-weight:bold;font-size:15px}
 footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-height:1.6}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}.rows{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:10px}.stat b{font-size:19px}}
+
+/* AI Tutor Floating Button & Panel */
+#aiTutorBtn {position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:var(--navy);color:white;border:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;z-index:1000;transition:transform 0.2s;}
+#aiTutorBtn:hover {transform:scale(1.05);}
+#aiTutorPanel {position:fixed;bottom:96px;right:24px;width:360px;max-width:calc(100vw - 48px);height:520px;max-height:calc(100vh - 120px);background:white;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.2);display:none;flex-direction:column;z-index:1000;border:1px solid var(--line);overflow:hidden;}
+#aiTutorPanel.open {display:flex;}
+.ai-header {background:var(--navy);color:white;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
+.ai-header h3 {margin:0;font-size:16px;}
+.ai-header button {background:none;border:none;color:white;font-size:20px;cursor:pointer;}
+.ai-messages {flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;background:var(--paper);}
+.msg {padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.5;max-width:85%;}
+.msg.user {background:var(--blue);color:white;align-self:flex-end;border-bottom-right-radius:2px;}
+.msg.ai {background:white;border:1px solid var(--line);color:var(--ink);align-self:flex-start;border-bottom-left-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.05);white-space:pre-wrap;}
+.msg.ai.loading {color:var(--muted);font-style:italic;}
+.ai-input-area {padding:12px;border-top:1px solid var(--line);display:flex;gap:8px;background:white;}
+.ai-input-area input {flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:20px;font-size:14px;outline:none;}
+.ai-input-area input:focus {border-color:var(--blue);}
+.ai-input-area button {background:var(--blue);color:white;border:none;border-radius:20px;padding:10px 18px;font-weight:700;cursor:pointer;}
+.ai-suggestions {padding:8px 12px;display:flex;gap:6px;overflow-x:auto;background:white;border-top:1px solid var(--line);}
+.ai-suggestions button {background:#f0f4ff;border:1px solid #dce4f5;border-radius:12px;padding:6px 12px;font-size:12px;color:var(--navy);cursor:pointer;white-space:nowrap;}
+.ai-suggestions button:hover {background:#e2e9fa;}
 </style>
 </head>
 <body>
@@ -215,13 +238,40 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   </footer>
 </main>
 
-<noscript>
-  <p style="text-align:center;color:#667085">This app needs JavaScript enabled to run.</p>
-</noscript>
+<!-- AI Tutor Floating Button & Panel -->
+<button id="aiTutorBtn" aria-label="Open AI Tutor">🧠</button>
+<div id="aiTutorPanel">
+  <div class="ai-header">
+    <h3>Lina · AI German Tutor</h3>
+    <button id="aiCloseBtn" aria-label="Close AI Tutor">✕</button>
+  </div>
+  <div class="ai-messages" id="aiMessages">
+    <div class="msg ai">Hallo! I'm Lina. I can see exactly which word you're studying, your quiz results, and your writing attempts. Ask me why an answer was wrong, or how to fix your sentence!</div>
+  </div>
+  <div class="ai-suggestions" id="aiSuggestions">
+    <button data-prompt="Why was my last answer wrong?">Why was I wrong?</button>
+    <button data-prompt="Give me a tip on how to remember this word.">Memory tip</button>
+    <button data-prompt="Explain the grammar of the current sentence.">Explain grammar</button>
+  </div>
+  <div class="ai-input-area">
+    <input type="text" id="aiInput" placeholder="Ask Lina a question…" autocomplete="off">
+    <button id="aiSendBtn">Send</button>
+  </div>
+</div>
 
 <script>
 (function () {
   'use strict';
+
+  /* ----------------------------------------------------------------
+   * Global Context Object (For the AI Tutor)
+   * ---------------------------------------------------------------- */
+  window.AppContext = {
+    activeTab: 'learn',
+    word: null,
+    quiz: { options: [], selected: null, correct: null },
+    write: { prompt: '', userInput: '', feedback: '', isPassed: null }
+  };
 
   var starter = [
     {"word": "ich", "english": "I", "pos": "pron", "say": "ikh", "visual": "👤", "de": "Ich lerne Deutsch.", "en": "I am learning German.", "deSay": [["Ich", "ikh"], ["lerne", "LAIR-nuh"], ["Deutsch", "DOYTCH"]], "level": "A1"},
@@ -510,6 +560,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
   function render() {
     var w = current();
+    
+    // UPDATE GLOBAL CONTEXT
+    window.AppContext.word = w;
+
     if (!w) {
       $('rank').textContent = 'NO MATCHES';
       $('levelLabel').textContent = '';
@@ -593,6 +647,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   function showView(view) {
+    window.AppContext.activeTab = view;
+    
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
       b.classList.toggle('active', b.getAttribute('data-view') === view);
     });
@@ -626,7 +682,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     var usedMeanings = new Set([answer.english]);
     var guard = 0;
 
-    // Pick distractors from the full list to ensure we always have 4 options
     while (options.length < 4 && guard++ < 500) {
       var candidate = words[Math.floor(Math.random() * words.length)];
       if (!usedMeanings.has(candidate.english)) {
@@ -636,6 +691,13 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     }
 
     shuffle(options);
+
+    // UPDATE GLOBAL CONTEXT
+    window.AppContext.quiz = {
+      options: options.map(o => o.english),
+      correct: answer.english,
+      selected: null
+    };
 
     $('qword').textContent = answer.word;
     $('feedback').textContent = '';
@@ -656,6 +718,9 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       btn.onclick = function () {
         var correct = options[i] === answer;
         
+        // UPDATE GLOBAL CONTEXT
+        window.AppContext.quiz.selected = options[i].english;
+
         if (correct) {
           passedQuiz.add(answer.word);
           saveSet(STORAGE_KEY_QUIZ, passedQuiz);
@@ -684,6 +749,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     
     currentWriteWord = target;
     
+    // UPDATE GLOBAL CONTEXT
+    window.AppContext.write = {
+      prompt: currentWriteWord.en,
+      userInput: '',
+      feedback: '',
+      isPassed: null
+    };
+    
     // Hide previous feedback and show input
     $('writePrompt').textContent = currentWriteWord.en;
     $('writeInput').value = '';
@@ -709,11 +782,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   function checkWriting() {
     if (!currentWriteWord) return;
     var userInput = $('writeInput').value.trim();
-    if (!userInput) return; // Ignore empty submissions
+    if (!userInput) return;
 
     var correct = currentWriteWord.de;
     
-    // Normalize for comparison: strip punctuation, extra spaces
     var normUser = userInput.replace(/[.,!?;:]/g, '').trim().replace(/\s+/g, ' ');
     var normCorrect = correct.replace(/[.,!?;:]/g, '').trim().replace(/\s+/g, ' ');
 
@@ -723,23 +795,31 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     correctEl.textContent = 'Correct sentence: ' + correct;
     correctEl.style.display = 'block';
 
-    // Perform assessment
     var isPassed = false;
+    var feedbackText = '';
+
     if (userInput === correct) {
-      feedbackEl.textContent = '✓ Passed! Perfect exact match.';
+      feedbackText = '✓ Passed! Perfect exact match.';
       feedbackEl.style.color = 'var(--green)';
       isPassed = true;
     } else if (normUser === normCorrect) {
-      feedbackEl.textContent = '✓ Passed! (Check your punctuation)';
+      feedbackText = '✓ Passed! (Check your punctuation)';
       feedbackEl.style.color = 'var(--green)';
       isPassed = true;
     } else if (normUser.toLowerCase() === normCorrect.toLowerCase()) {
-      feedbackEl.textContent = '⚠️ Almost! Check your capital letters (German nouns are capitalized).';
+      feedbackText = '⚠️ Almost! Check your capital letters (German nouns are capitalized).';
       feedbackEl.style.color = '#b54708'; // orange
     } else {
-      feedbackEl.textContent = '❌ Not quite. Keep practising!';
+      feedbackText = '❌ Not quite. Keep practising!';
       feedbackEl.style.color = '#b42318'; // red
     }
+
+    feedbackEl.textContent = feedbackText;
+
+    // UPDATE GLOBAL CONTEXT
+    window.AppContext.write.userInput = userInput;
+    window.AppContext.write.feedback = feedbackText;
+    window.AppContext.write.isPassed = isPassed;
 
     if (isPassed) {
       passedWrite.add(currentWriteWord.word);
@@ -749,11 +829,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       $('retryWrite').style.display = 'inline-block';
     }
 
-    // Lock UI, show Next button
     $('checkWrite').disabled = true;
     $('checkWrite').style.display = 'none';
     $('nextWrite').style.display = 'inline-block';
-    $('writeInput').blur(); // Close mobile keyboard
+    $('writeInput').blur();
   }
 
   /* ----------------------------------------------------------------
@@ -763,7 +842,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     btn.onclick = function () { showView(btn.getAttribute('data-view')); };
   });
 
-  // Learn view events
   $('sayWord').onclick = function () { speakHeadword(current()); };
   $('sayExample').onclick = function () { speakSentence(current()); };
   $('again').onclick = function () { speakHeadword(current()); };
@@ -783,9 +861,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     render();
   };
 
-  // Quiz view events
   $('retryQuiz').onclick = function () {
-    newQuestion(); // Resets options and feedback for the same word
+    newQuestion(); 
   };
   $('newQuiz').onclick = function () {
     if (!filtered.length) return;
@@ -794,7 +871,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     newQuestion();
   };
 
-  // Write view events
   $('retryWrite').onclick = function () {
     $('writeInput').value = '';
     $('writeFeedback').textContent = '';
@@ -804,6 +880,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     $('checkWrite').disabled = false;
     $('checkWrite').style.display = 'inline-block';
     $('writeInput').focus();
+
+    window.AppContext.write.userInput = '';
+    window.AppContext.write.feedback = '';
+    window.AppContext.write.isPassed = null;
   };
   $('nextWrite').onclick = function () {
     if (!filtered.length) return;
@@ -819,13 +899,119 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     }
   });
 
-  // Filtering events
   $('search').addEventListener('input', filter);
   $('level').addEventListener('change', filter);
   $('kind').addEventListener('change', filter);
 
   /* Init */
   filter();
+})();
+</script>
+
+<!-- AI Tutor Logic -->
+<script>
+(function() {
+  'use strict';
+
+  const btn = document.getElementById('aiTutorBtn');
+  const panel = document.getElementById('aiTutorPanel');
+  const closeBtn = document.getElementById('aiCloseBtn');
+  const messagesContainer = document.getElementById('aiMessages');
+  const input = document.getElementById('aiInput');
+  const sendBtn = document.getElementById('aiSendBtn');
+  const suggestionsContainer = document.getElementById('aiSuggestions');
+
+  btn.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) input.focus();
+  });
+
+  closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+
+  suggestionsContainer.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON') {
+      input.value = e.target.getAttribute('data-prompt');
+      sendMessage();
+    }
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    input.value = '';
+    const loadingMsg = addMessage('Thinking…', 'ai loading');
+
+    // Retrieve the complete context from the app
+    const ctx = window.AppContext || {};
+    let contextString = "";
+
+    if (ctx.word) {
+      contextString += `CURRENT WORD: "${ctx.word.word}" (Meaning: "${ctx.word.english}", Pronunciation guide: "${ctx.word.say}", Example: "${ctx.word.de}" - "${ctx.word.en}").\n`;
+    }
+
+    contextString += `CURRENT TAB: ${ctx.activeTab}\n`;
+
+    if (ctx.activeTab === 'quiz' && ctx.quiz) {
+      contextString += `QUIZ STATUS: The options were [${ctx.quiz.options.join(', ')}]. `;
+      if (ctx.quiz.selected) {
+        contextString += `The student chose "${ctx.quiz.selected}". The correct answer is "${ctx.quiz.correct}".`;
+      } else {
+        contextString += `The student has not answered yet.`;
+      }
+    } else if (ctx.activeTab === 'write' && ctx.write && ctx.write.userInput) {
+      contextString += `WRITING STATUS: The prompt was "${ctx.write.prompt}". The student typed: "${ctx.write.userInput}". The app feedback was: "${ctx.write.feedback}".`;
+    }
+
+    const systemPrompt = `You are Lina, a brilliant and friendly German tutor. You are helping a learner inside a vocabulary app. 
+You have full access to their current screen and context. Use this to give highly specific, encouraging help. 
+If they ask "Why was my answer wrong?" in the Quiz tab, explain the mistake based on the options they chose. 
+If they ask about their writing, correct their exact grammar mistakes. 
+Speak simply, use English to explain, and provide the German text in bold if necessary.`;
+
+    try {
+      // Use Puter's AI (gpt-4o-mini is fast and smart)
+      const response = await puter.ai.chat(text, {
+        model: 'openai/gpt-4o-mini',
+        system: systemPrompt,
+        context: contextString // Puter allows passing additional context
+      });
+
+      loadingMsg.remove();
+
+      let aiText = '';
+      if (typeof response === 'string') aiText = response;
+      else if (response && response.message && response.message.content) {
+        if (Array.isArray(response.message.content)) {
+          aiText = response.message.content.map(part => part.text || '').join('');
+        } else {
+          aiText = response.message.content;
+        }
+      } else if (response && response.text) aiText = response.text;
+      else aiText = 'Sorry, I could not generate a response. Please try again.';
+
+      addMessage(aiText, 'ai');
+    } catch (error) {
+      console.error('AI Tutor error:', error);
+      loadingMsg.remove();
+      addMessage('Sorry, I encountered an error. Please check your internet connection and try again.', 'ai');
+    }
+  }
+
+  function addMessage(text, type) {
+    const div = document.createElement('div');
+    div.className = `msg ${type}`;
+    div.textContent = text;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    return div;
+  }
 })();
 </script>
 </body>
