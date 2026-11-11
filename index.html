@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#102c67">
-<meta name="description" content="German vocabulary starter set with English respelling, audio, example sentences, and quizzes. Building toward 2,500 words.">
+<meta name="description" content="German vocabulary starter set with English respelling, audio, example sentences, quizzes, and writing practice.">
 <title>Deutsch 2500 · Starter — German Vocabulary Trainer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102c67'/%3E%3Ctext x='32' y='43' font-family='system-ui,sans-serif' font-size='24' font-weight='800' text-anchor='middle' fill='white'%3EDW%3C/text%3E%3C/svg%3E">
 <style>
@@ -44,7 +44,6 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .audio-status.ok{background:#e5f7ed;color:#11643a}
 .audio-status.warn{background:#fff2e8;color:#994b10}
 .audio-status.checking{background:#f2f7ff;color:#384766}
-.audio-status.none{background:#f2f7ff;color:#384766}
 .example{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
 .example .de{font-size:18px;font-weight:700}
 .example .en{color:var(--muted);margin-top:5px}
@@ -74,12 +73,15 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .row:hover{background:#f6f9ff}
 .row b{color:var(--navy)}
 .row small{color:var(--muted)}
-.quizbox{background:white;border:1px solid var(--line);border-radius:16px;padding:22px}
+.quizbox{background:white;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
 .quizprompt{font-size:30px;font-weight:800;color:var(--navy);margin:16px 0;overflow-wrap:anywhere}
 .choices{display:grid;gap:9px}
 .choices button{padding:13px;border:1px solid var(--line);border-radius:10px;background:white;text-align:left;cursor:pointer}
 .choices button:hover{background:#eaf2ff}
 .choices button:disabled{cursor:default;opacity:.75}
+.write-input{width:100%;padding:14px;font-size:18px;border:2px solid var(--line);border-radius:10px;margin-top:15px;box-sizing:border-box;outline:none;transition:border-color .2s}
+.write-input:focus{border-color:var(--blue)}
+.write-feedback{margin-top:15px;font-weight:bold;font-size:15px}
 footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-height:1.6}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}.rows{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:10px}.stat b{font-size:19px}}
 </style>
@@ -87,7 +89,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 <body>
 <header>
   <div class="brand"><span>DW</span> Deutsch 2500 <small>Starter</small></div>
-  <p>See it · hear it · say it · remember it</p>
+  <p>See it · hear it · say it · write it · remember it</p>
 </header>
 
 <main>
@@ -100,6 +102,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   <nav class="tabs" aria-label="Views">
     <button type="button" class="tab active" data-view="learn">Learn</button>
     <button type="button" class="tab" data-view="quiz">Quick test</button>
+    <button type="button" class="tab" data-view="write">Write</button>
     <button type="button" class="tab" data-view="browse">Browse words</button>
   </nav>
 
@@ -165,7 +168,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
           <div class="krow"><span class="k">aa ee oo</span><span class="kd">Double letters = long vowel.</span></div>
         </div>
 
-        <p><b>Audio accuracy:</b> A German voice gives accurate pronunciation. Without one, the app sends the English respelling to the device voice — an approximation, not a perfect German sound. Install a German text-to-speech voice in your phone settings for best results.</p>
+        <p><b>Audio accuracy:</b> A German voice gives accurate pronunciation. Without one, the app sends the English respelling to the device voice — an approximation, not a perfect German sound.</p>
         <p><b>Progress:</b> Your learned words are saved on this device.</p>
       </aside>
     </div>
@@ -178,6 +181,20 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       <div class="choices" id="choices"></div>
       <p id="feedback" aria-live="polite"></p>
       <button type="button" class="audio secondary" id="newQuiz">Next question →</button>
+    </div>
+  </section>
+
+  <section id="writeView" hidden>
+    <div class="quizbox">
+      <div class="eyebrow">Write in German · type the translation</div>
+      <div class="quizprompt" id="writePrompt">—</div>
+      <input type="text" id="writeInput" class="write-input" placeholder="Type the German sentence here…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="actions" style="margin-top: 15px">
+        <button type="button" class="next" id="checkWrite">Check answer</button>
+        <button type="button" class="audio secondary" id="nextWrite" style="display:none">Next sentence →</button>
+      </div>
+      <p id="writeFeedback" class="write-feedback" aria-live="polite"></p>
+      <p id="writeCorrect" style="margin-top:8px; color:var(--muted); font-weight:500; display:none;"></p>
     </div>
   </section>
 
@@ -268,6 +285,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var filtered = words.slice();
   var index = 0;
   var learned = loadLearned();
+  var currentWriteWord = null;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -368,15 +386,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     }
   }
 
-  /* Fallback translator for English TTS: makes the respelling sound less like English */
   function ttsFallback(respelling) {
     if (!respelling) return '';
     return String(respelling)
       .replace(/ß/g, 'ss')
       .replace(/Ö/g, 'ur').replace(/ö/g, 'ur')
       .replace(/Ü/g, 'ee').replace(/ü/g, 'ee')
-      .replace(/KH/g, 'k')   // Throaty ch -> hard k (closer to German 'Buch')
-      .replace(/kh/g, 'h')   // Soft ch -> h (breathy, so 'ikh' -> 'ih', not 'ick')
+      .replace(/KH/g, 'k')
+      .replace(/kh/g, 'h')
       .replace(/ur{2,}/g, 'ur')
       .replace(/ee{2,}/g, 'ee')
       .replace(/oo{2,}/g, 'oo');
@@ -556,10 +573,12 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     });
     $('learnView').hidden = view !== 'learn';
     $('quizView').hidden = view !== 'quiz';
+    $('writeView').hidden = view !== 'write';
     $('browseView').hidden = view !== 'browse';
 
     if (view === 'browse') renderRows();
     if (view === 'quiz') newQuestion();
+    if (view === 'write') newWritingPrompt();
   }
 
   function shuffle(arr) {
@@ -607,10 +626,76 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     });
   }
 
+  /* ----------------------------------------------------------------
+   * Writing Module
+   * ---------------------------------------------------------------- */
+  function newWritingPrompt() {
+    if (!words.length) return;
+    currentWriteWord = words[Math.floor(Math.random() * words.length)];
+    
+    // Hide previous feedback and show input
+    $('writePrompt').textContent = currentWriteWord.en;
+    $('writeInput').value = '';
+    $('writeFeedback').textContent = '';
+    $('writeFeedback').style.color = '';
+    $('writeCorrect').style.display = 'none';
+    $('nextWrite').style.display = 'none';
+    
+    // Show Check button, enable it
+    $('checkWrite').disabled = false;
+    $('checkWrite').style.display = 'inline-block';
+    
+    // Focus the input so the user can type immediately
+    $('writeInput').focus();
+  }
+
+  function checkWriting() {
+    if (!currentWriteWord) return;
+    var userInput = $('writeInput').value.trim();
+    if (!userInput) return; // Ignore empty submissions
+
+    var correct = currentWriteWord.de;
+    
+    // Normalize for comparison: strip punctuation, extra spaces
+    var normUser = userInput.replace(/[.,!?;:]/g, '').trim().replace(/\s+/g, ' ');
+    var normCorrect = correct.replace(/[.,!?;:]/g, '').trim().replace(/\s+/g, ' ');
+
+    var feedbackEl = $('writeFeedback');
+    var correctEl = $('writeCorrect');
+
+    correctEl.textContent = 'Correct sentence: ' + correct;
+    correctEl.style.display = 'block';
+
+    // Perform assessment
+    if (userInput === correct) {
+      feedbackEl.textContent = '✓ Perfect! Exact match.';
+      feedbackEl.style.color = 'var(--green)';
+    } else if (normUser === normCorrect) {
+      feedbackEl.textContent = '✓ Correct! (Check your punctuation)';
+      feedbackEl.style.color = 'var(--green)';
+    } else if (normUser.toLowerCase() === normCorrect.toLowerCase()) {
+      feedbackEl.textContent = '⚠️ Almost! Check your capital letters (German nouns are capitalized).';
+      feedbackEl.style.color = '#b54708'; // orange
+    } else {
+      feedbackEl.textContent = '❌ Not quite. Keep practising!';
+      feedbackEl.style.color = '#b42318'; // red
+    }
+
+    // Lock UI, show Next button
+    $('checkWrite').disabled = true;
+    $('checkWrite').style.display = 'none';
+    $('nextWrite').style.display = 'inline-block';
+    $('writeInput').blur(); // Close mobile keyboard
+  }
+
+  /* ----------------------------------------------------------------
+   * Event wiring
+   * ---------------------------------------------------------------- */
   Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (btn) {
     btn.onclick = function () { showView(btn.getAttribute('data-view')); };
   });
 
+  // Learn view events
   $('sayWord').onclick = function () { speakHeadword(current()); };
   $('sayExample').onclick = function () { speakSentence(current()); };
   $('again').onclick = function () { speakHeadword(current()); };
@@ -630,11 +715,24 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     render();
   };
 
+  // Quiz view events
+  $('newQuiz').onclick = newQuestion;
+
+  // Write view events
+  $('checkWrite').onclick = checkWriting;
+  $('nextWrite').onclick = newWritingPrompt;
+  $('writeInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      checkWriting();
+    }
+  });
+
+  // Filtering events
   $('search').addEventListener('input', filter);
   $('level').addEventListener('change', filter);
   $('kind').addEventListener('change', filter);
-  $('newQuiz').onclick = newQuestion;
 
+  /* Init */
   filter();
 })();
 </script>
