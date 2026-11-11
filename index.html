@@ -180,7 +180,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       <div class="quizprompt" id="qword">—</div>
       <div class="choices" id="choices"></div>
       <p id="feedback" aria-live="polite"></p>
-      <button type="button" class="audio secondary" id="newQuiz">Next question →</button>
+      <button type="button" class="audio secondary" id="newQuiz">Next word →</button>
     </div>
   </section>
 
@@ -589,14 +589,19 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     return arr;
   }
 
+  /* ----------------------------------------------------------------
+   * Quiz Module - locked to current word
+   * ---------------------------------------------------------------- */
   function newQuestion() {
-    if (!words.length) return;
+    var target = current();
+    if (!target) return;
 
-    var answer = words[Math.floor(Math.random() * words.length)];
+    var answer = target;
     var options = [answer];
     var usedMeanings = new Set([answer.english]);
     var guard = 0;
 
+    // Pick distractors from the full list to ensure we always have 4 options
     while (options.length < 4 && guard++ < 500) {
       var candidate = words[Math.floor(Math.random() * words.length)];
       if (!usedMeanings.has(candidate.english)) {
@@ -627,11 +632,13 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   /* ----------------------------------------------------------------
-   * Writing Module
+   * Writing Module - locked to current word
    * ---------------------------------------------------------------- */
   function newWritingPrompt() {
-    if (!words.length) return;
-    currentWriteWord = words[Math.floor(Math.random() * words.length)];
+    var target = current();
+    if (!target) return;
+    
+    currentWriteWord = target;
     
     // Hide previous feedback and show input
     $('writePrompt').textContent = currentWriteWord.en;
@@ -715,12 +722,24 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     render();
   };
 
-  // Quiz view events
-  $('newQuiz').onclick = newQuestion;
+  // Quiz view events - Now advances the master index
+  $('newQuiz').onclick = function () {
+    if (!filtered.length) return;
+    index = (index + 1) % filtered.length;
+    render();
+    newQuestion();
+  };
 
-  // Write view events
+  // Write view events - Now advances the master index
+  $('nextWrite').onclick = function () {
+    if (!filtered.length) return;
+    index = (index + 1) % filtered.length;
+    render();
+    newWritingPrompt();
+  };
+  
   $('checkWrite').onclick = checkWriting;
-  $('nextWrite').onclick = newWritingPrompt;
+  
   $('writeInput').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
       checkWriting();
