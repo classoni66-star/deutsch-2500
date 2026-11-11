@@ -40,6 +40,11 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .visual{height:160px;border-radius:14px;background:linear-gradient(135deg,#eaf6ff,#f4f0ff);display:grid;place-items:center;font-size:94px;margin:18px 0}
 .audio{border:0;border-radius:12px;background:var(--blue);color:white;padding:11px 15px;font-weight:700;cursor:pointer}
 .audio.secondary{background:#eaf2ff;color:var(--navy)}
+.audio-status{margin-top:10px;font-size:12px;line-height:1.45;padding:9px 11px;border-radius:9px;font-weight:600}
+.audio-status.ok{background:#e5f7ed;color:#11643a}
+.audio-status.warn{background:#fff2e8;color:#994b10}
+.audio-status.checking{background:#f2f7ff;color:#384766}
+.audio-status.none{background:#f2f7ff;color:#384766}
 .example{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
 .example .de{font-size:18px;font-weight:700}
 .example .en{color:var(--muted);margin-top:5px}
@@ -129,6 +134,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
           <button type="button" class="audio" id="sayWord">🔊 Hear the word</button>
           <button type="button" class="audio secondary" id="sayExample">▶ Hear example</button>
         </div>
+        <div id="audioStatus" class="audio-status checking" role="status" aria-live="polite">Checking device voices…</div>
         <div class="example">
           <div class="eyebrow">In a sentence</div>
           <div class="de" id="de"></div>
@@ -144,7 +150,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
       <aside class="card side">
         <h3>How to say it</h3>
-        <p>Read the blue line under each word, then listen to the audio. <b>CAPITALS</b> show the stressed syllable.</p>
+        <p>Read the blue line under each word, then tap the audio button. <b>CAPITALS</b> show the stressed syllable.</p>
 
         <div class="key" aria-label="Pronunciation key">
           <div class="krow"><span class="k">kh</span><span class="kd"><span class="soft">SOFT ch</span> — after i, e, ä, ö, ü. Whisper a "y" (ich, nicht, sprechen).</span></div>
@@ -159,7 +165,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
           <div class="krow"><span class="k">aa ee oo</span><span class="kd">Double letters = long vowel.</span></div>
         </div>
 
-        <p><b>Audio:</b> Uses a German voice on your device. Quality depends on your phone.</p>
+        <p><b>Audio accuracy:</b> A German voice gives accurate pronunciation. Without one, the app sends the English respelling to the device voice — an approximation, not a perfect German sound. Install a German text-to-speech voice in your phone settings for best results.</p>
         <p><b>Progress:</b> Your learned words are saved on this device.</p>
       </aside>
     </div>
@@ -198,12 +204,12 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
   /* ------------------------------------------------------------------
    * Data — pronunciation corrected against Hochdeutsch.
-   *   say   = headword respelling
+   *   say   = headword respelling (for display AND English-voice fallback)
    *   deSay = [word, respelling] pairs for each sentence
    * Convention:
-   *   kh  (lowercase) = SOFT ch (ich, nicht, sprechen) — after i e ä ö ü
-   *   KH  (uppercase) = THROATY ch (Buch, machen, nach) — after a o u
-   *   Ö   = "eh" with rounded lips   |   Ü = "ee" with rounded lips
+   *   kh  (lowercase) = SOFT ch — after i e ä ö ü
+   *   KH  (uppercase) = THROATY ch — after a o u
+   *   Ö = "eh" with rounded lips  |  Ü = "ee" with rounded lips
    *   CAPITALS = stressed syllable
    * ------------------------------------------------------------------ */
   var starter = [
@@ -304,43 +310,153 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   /* ------------------------------------------------------------------
-   * Speech synthesis
+   * Speech synthesis — dual path
+   *
+   *   German voice available  → speak German orthography  (accurate)
+   *   No German voice         → speak English respelling  (approximate)
+   *
+   * getVoices() often returns [] on first call. We poll until voices
+   * appear (or 10s timeout) and retry on every speak() call.
    * ------------------------------------------------------------------ */
-  var germanVoice = null;
   var speechSupported = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+  var germanVoice = null;
+  var voicesReady = false;
 
   function pickGermanVoice() {
-    if (!speechSupported) return;
+    if (!speechSupported) return null;
     try {
       var voices = window.speechSynthesis.getVoices();
-      germanVoice = null;
+      if (!voices || !voices.length) return null;
+      voicesReady = true;
       for (var i = 0; i < voices.length; i++) {
-        if (/^de/i.test(voices[i].lang)) { germanVoice = voices[i]; break; }
+        if (/^de([-_]|$)/i.test(voices[i].lang)) {
+          germanVoice = voices[i];
+          return germanVoice;
+        }
       }
-    } catch (e) { /* ignore */ }
-  }
-
-  if (speechSupported) {
-    pickGermanVoice();
-    if (typeof window.speechSynthesis.addEventListener === 'function') {
-      window.speechSynthesis.addEventListener('voiceschanged', pickGermanVoice);
+      germanVoice = null;
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 
-  function speak(text) {
-    if (!text) return;
+  function updateAudioStatus() {
+    var el = $('audioStatus');
+    if (!el) return;
+    if (!speechSupported) {
+      el.className = 'audio-status warn';
+      el.textContent = '⚠️ Speech synthesis is not supported in this browser.';
+      return;
+    }
+    if (germanVoice) {
+      el.className = 'audio-status ok';
+      el.textContent = '🔊 German voice ready (' + germanVoice.name + ') — accurate pronunciation.';
+    } else if (!voicesReady) {
+      el.className = 'audio-status checking';
+      el.textContent = 'Loading device voices…';
+    } else {
+      el.className = 'audio-status warn';
+      el.textContent = '⚠️ No German voice on this device. Using English approximation — install a German text-to-speech voice in your phone settings for accurate audio.';
+    }
+  }
+
+  function ensureVoices() {
+    if (!speechSupported) { updateAudioStatus(); return; }
+    pickGermanVoice();
+    updateAudioStatus();
+    if (germanVoice) return;
+    var attempts = 0;
+    (function poll() {
+      var voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        pickGermanVoice();
+        updateAudioStatus();
+        return;
+      }
+      if (attempts++ < 40) {
+        setTimeout(poll, 250);
+      } else {
+        voicesReady = true;
+        updateAudioStatus();
+      }
+    })();
+  }
+
+  if (speechSupported) {
+    ensureVoices();
+    if (typeof window.speechSynthesis.addEventListener === 'function') {
+      window.speechSynthesis.addEventListener('voiceschanged', function () {
+        pickGermanVoice();
+        updateAudioStatus();
+      });
+    }
+  }
+
+  /* Convert a display respelling into something an English TTS voice
+     will pronounce as close to German as possible. Only used in
+     fallback mode. Keeps Ö→ur, Ü→ee, collapses doubled vowel runs. */
+  function ttsFallback(respelling) {
+    if (!respelling) return '';
+    return String(respelling)
+      .replace(/ß/g, 'ss')
+      .replace(/Ö/g, 'ur').replace(/ö/g, 'ur')
+      .replace(/Ü/g, 'ee').replace(/ü/g, 'ee')
+      .replace(/KH/g, 'k').replace(/kh/g, 'k')
+      .replace(/ur{2,}/g, 'ur')
+      .replace(/ee{2,}/g, 'ee')
+      .replace(/oo{2,}/g, 'oo');
+  }
+
+  function speakText(text, lang, voice, rate) {
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      u.rate = typeof rate === 'number' ? rate : 0.83;
+      if (voice) u.voice = voice;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* ignore */ }
+  }
+
+  function speakHeadword(w) {
+    if (!w) return;
     if (!speechSupported) {
       window.alert('Speech audio is not supported in this browser.');
       return;
     }
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = 'de-DE';
-      u.rate = 0.83;
-      if (germanVoice) u.voice = germanVoice;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* ignore */ }
+    if (!germanVoice) pickGermanVoice();
+
+    if (germanVoice) {
+      // Accurate path: German voice + German orthography
+      speakText(w.word, 'de-DE', germanVoice, 0.83);
+    } else {
+      // Fallback: English voice + English respelling
+      speakText(ttsFallback(w.say || w.word), 'en-US', null, 0.9);
+    }
+  }
+
+  function speakSentence(w) {
+    if (!w) return;
+    if (!speechSupported) {
+      window.alert('Speech audio is not supported in this browser.');
+      return;
+    }
+    if (!germanVoice) pickGermanVoice();
+
+    if (germanVoice) {
+      speakText(w.de || w.word, 'de-DE', germanVoice, 0.83);
+    } else {
+      var pairs = (Array.isArray(w.deSay) && w.deSay.length)
+        ? w.deSay
+        : [[w.word, w.say || w.word]];
+      var parts = [];
+      for (var i = 0; i < pairs.length; i++) {
+        var p = pairs[i];
+        if (Array.isArray(p) && p.length >= 2) parts.push(ttsFallback(p[1]));
+      }
+      speakText(parts.join(' '), 'en-US', null, 0.9);
+    }
   }
 
   /* ------------------------------------------------------------------
@@ -538,25 +654,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     btn.onclick = function () { showView(btn.getAttribute('data-view')); };
   });
 
-  $('sayWord').onclick = function () {
-    var w = current();
-    if (w) speak(w.word);
-  };
-
-  $('sayExample').onclick = function () {
-    var w = current();
-    if (w) speak(w.de || w.word);
-  };
+  $('sayWord').onclick = function () { speakHeadword(current()); };
+  $('sayExample').onclick = function () { speakSentence(current()); };
+  $('again').onclick = function () { speakHeadword(current()); };
 
   $('next').onclick = function () {
     if (!filtered.length) return;
     index = (index + 1) % filtered.length;
     render();
-  };
-
-  $('again').onclick = function () {
-    var w = current();
-    if (w) speak(w.word);
   };
 
   $('mark').onclick = function () {
@@ -580,4 +685,4 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 })();
 </script>
 </body>
-  </html>
+        </html>
