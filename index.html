@@ -59,6 +59,7 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .known{background:#e5f7ed;color:#11643a}
 .next{background:var(--navy);color:white}
 .unknown{background:#fff2e8;color:#994b10}
+.prev{background:#eaf2ff;color:var(--navy)}
 .side h3{margin:0 0 10px}
 .side p{color:var(--muted);line-height:1.5}
 .side .hint{padding:12px;background:#f2f7ff;border-radius:12px;margin:10px 0;font-size:14px;color:var(--ink);line-height:1.55}
@@ -73,10 +74,10 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .rows{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 
 /* Updated Row Styles for Reveal Feature */
-.row{background:white;border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;}
+.row{background:white;border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;transition:background 0.2s;}
+.row:hover{background:#f6f9ff;}
 .row-header{display:flex;justify-content:space-between;align-items:center;}
-.row-word{color:var(--navy);font-weight:650;font-size:16px;cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color 0.2s;}
-.row-word:hover{text-decoration-color:var(--navy);}
+.row-word{color:var(--navy);font-weight:650;font-size:16px;}
 .row-body{display:flex;align-items:center;flex-wrap:wrap;gap:10px;}
 .reveal-btn{background:#eaf2ff;border:1px solid #dce4f5;border-radius:8px;padding:6px 10px;font-size:12px;color:var(--navy);font-weight:700;cursor:pointer;transition:background 0.2s;}
 .reveal-btn:hover{background:#dce4f5;}
@@ -180,6 +181,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
         <div class="actions">
           <button type="button" class="unknown" id="again">↻ Practise again</button>
           <button type="button" class="known" id="mark">✓ I know this</button>
+          <button type="button" class="prev" id="prev">← Previous</button>
           <button type="button" class="next" id="next">Next word →</button>
         </div>
       </article>
@@ -643,11 +645,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       return;
     }
 
-    // UPDATED: Word is clickable to study, meaning is hidden behind a reveal button
     $('rows').innerHTML = list.map(function (w) {
-      return '<div class="row">' +
+      return '<div class="row" data-word="' + esc(w.word) + '">' +
         '<div class="row-header">' +
-          '<span class="row-word" data-word="' + esc(w.word) + '">' + esc(w.word) + '</span>' +
+          '<span class="row-word">' + esc(w.word) + '</span>' +
           '<small style="color:var(--muted)">' + esc(w.level || '—') + '</small>' +
         '</div>' +
         '<div class="row-body">' +
@@ -657,10 +658,13 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       '</div>';
     }).join('');
 
-    // Click on German word to study
-    Array.prototype.forEach.call($('rows').querySelectorAll('.row-word'), function (el) {
-      el.onclick = function () {
-        var target = el.getAttribute('data-word');
+    // Click anywhere on the row (except the reveal button) to study the word
+    Array.prototype.forEach.call($('rows').querySelectorAll('.row'), function (row) {
+      row.onclick = function (e) {
+        // If the user clicked the reveal button, do not navigate
+        if (e.target.closest('.reveal-btn')) return;
+
+        var target = row.getAttribute('data-word');
         for (var i = 0; i < filtered.length; i++) {
           if (filtered[i].word === target) { index = i; break; }
         }
@@ -671,7 +675,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
     // Click to reveal/hide English
     Array.prototype.forEach.call($('rows').querySelectorAll('.reveal-btn'), function (btn) {
-      btn.onclick = function () {
+      btn.onclick = function (e) {
+        e.stopPropagation(); // Prevent row click from firing
         var engSpan = btn.nextElementSibling;
         if (engSpan.style.display === 'none' || engSpan.style.display === '') {
           engSpan.style.display = 'inline';
@@ -890,6 +895,12 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   $('sayExample').onclick = function () { speakSentence(current()); };
   $('again').onclick = function () { speakHeadword(current()); };
 
+  $('prev').onclick = function () {
+    if (!filtered.length) return;
+    index = (index - 1 + filtered.length) % filtered.length;
+    render();
+  };
+
   $('next').onclick = function () {
     if (!filtered.length) return;
     index = (index + 1) % filtered.length;
@@ -1094,4 +1105,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-  </html>
+                                                           </html>
