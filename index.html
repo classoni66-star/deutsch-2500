@@ -71,10 +71,17 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .list{margin-top:16px}
 .listhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .rows{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.row{background:white;border:1px solid var(--line);border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;gap:8px;text-align:left;cursor:pointer}
-.row:hover{background:#f6f9ff}
-.row b{color:var(--navy)}
-.row small{color:var(--muted)}
+
+/* Updated Row Styles for Reveal Feature */
+.row{background:white;border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;}
+.row-header{display:flex;justify-content:space-between;align-items:center;}
+.row-word{color:var(--navy);font-weight:650;font-size:16px;cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color 0.2s;}
+.row-word:hover{text-decoration-color:var(--navy);}
+.row-body{display:flex;align-items:center;flex-wrap:wrap;gap:10px;}
+.reveal-btn{background:#eaf2ff;border:1px solid #dce4f5;border-radius:8px;padding:6px 10px;font-size:12px;color:var(--navy);font-weight:700;cursor:pointer;transition:background 0.2s;}
+.reveal-btn:hover{background:#dce4f5;}
+.eng-meaning{display:none;color:var(--muted);font-size:14px;font-weight:600;}
+
 .quizbox{background:white;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
 .quizprompt{font-size:30px;font-weight:800;color:var(--navy);margin:16px 0;overflow-wrap:anywhere}
 .choices{display:grid;gap:9px}
@@ -636,21 +643,49 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       return;
     }
 
+    // UPDATED: Word is clickable to study, meaning is hidden behind a reveal button
     $('rows').innerHTML = list.map(function (w) {
-      return '<button type="button" class="row" data-word="' + esc(w.word) + '">' +
-        '<span><b>' + esc(w.word) + '</b><br><small>' + esc(w.english) + '</small></span>' +
-        '<small>' + esc(w.level || '—') + '</small>' +
-        '</button>';
+      return '<div class="row">' +
+        '<div class="row-header">' +
+          '<span class="row-word" data-word="' + esc(w.word) + '">' + esc(w.word) + '</span>' +
+          '<small style="color:var(--muted)">' + esc(w.level || '—') + '</small>' +
+        '</div>' +
+        '<div class="row-body">' +
+          '<button type="button" class="reveal-btn">Reveal English</button>' +
+          '<span class="eng-meaning">' + esc(w.english) + '</span>' +
+        '</div>' +
+      '</div>';
     }).join('');
 
-    Array.prototype.forEach.call($('rows').querySelectorAll('.row'), function (btn) {
-      btn.onclick = function () {
-        var target = btn.getAttribute('data-word');
+    // Click on German word to study
+    Array.prototype.forEach.call($('rows').querySelectorAll('.row-word'), function (el) {
+      el.onclick = function () {
+        var target = el.getAttribute('data-word');
         for (var i = 0; i < filtered.length; i++) {
           if (filtered[i].word === target) { index = i; break; }
         }
         showView('learn');
         render();
+      };
+    });
+
+    // Click to reveal/hide English
+    Array.prototype.forEach.call($('rows').querySelectorAll('.reveal-btn'), function (btn) {
+      btn.onclick = function () {
+        var engSpan = btn.nextElementSibling;
+        if (engSpan.style.display === 'none' || engSpan.style.display === '') {
+          engSpan.style.display = 'inline';
+          btn.textContent = 'Hide English';
+          btn.style.background = '#f0f0f0';
+          btn.style.color = '#667085';
+          btn.style.borderColor = '#e3e9f2';
+        } else {
+          engSpan.style.display = 'none';
+          btn.textContent = 'Reveal English';
+          btn.style.background = '#eaf2ff';
+          btn.style.color = 'var(--navy)';
+          btn.style.borderColor = '#dce4f5';
+        }
       };
     });
   }
@@ -954,19 +989,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     const text = btnElement.getAttribute('data-text');
     if (!text) return;
     
-    // Clean text for speech (remove markdown symbols like **, #, *)
     const cleanText = text.replace(/[*#_`]/g, '');
     
-    // Check if we have access to the global speak function
     if (window.speakTextGlobal) {
-      // Try to find German voice, fallback to normal lang if not
       let voices = window.speechSynthesis.getVoices();
       let germanVoice = voices.find(v => /^de([-_]|$)/i.test(v.lang));
       
-      // Use German voice if available, otherwise default browser voice
       window.speakTextGlobal(cleanText, germanVoice ? 'de-DE' : 'en-US', germanVoice, 0.9);
     } else {
-      // Fallback if main script hasn't loaded properly
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(cleanText);
       u.lang = 'de-DE';
@@ -982,7 +1012,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     input.value = '';
     const loadingMsg = addMessage('Thinking…', 'ai loading');
 
-    // Retrieve the complete context from the app
     const ctx = window.AppContext || {};
     let contextString = "";
 
@@ -1041,7 +1070,6 @@ Speak simply, use English to explain, and provide the German text in bold if nec
     const div = document.createElement('div');
     div.className = `msg ${type}`;
     
-    // If it's an AI message (not loading), add the audio button
     if (type === 'ai' && !type.includes('loading')) {
       const textSpan = document.createElement('span');
       textSpan.className = 'msg-text';
@@ -1066,4 +1094,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-                                                       </html>
+  </html>
