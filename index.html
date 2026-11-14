@@ -60,6 +60,8 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .next{background:var(--navy);color:white}
 .unknown{background:#fff2e8;color:#994b10}
 .prev{background:#eaf2ff;color:var(--navy)}
+.autoplay{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
+.autoplay.active{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
 .side h3{margin:0 0 10px}
 .side p{color:var(--muted);line-height:1.5}
 .side .hint{padding:12px;background:#f2f7ff;border-radius:12px;margin:10px 0;font-size:14px;color:var(--ink);line-height:1.55}
@@ -72,8 +74,6 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .list{margin-top:16px}
 .listhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .rows{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-
-/* Updated Row Styles for Reveal Feature */
 .row{background:white;border:1px solid var(--line);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;cursor:pointer;transition:background 0.2s;}
 .row:hover{background:#f6f9ff;}
 .row-header{display:flex;justify-content:space-between;align-items:center;}
@@ -82,7 +82,6 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .reveal-btn{background:#eaf2ff;border:1px solid #dce4f5;border-radius:8px;padding:6px 10px;font-size:12px;color:var(--navy);font-weight:700;cursor:pointer;transition:background 0.2s;}
 .reveal-btn:hover{background:#dce4f5;}
 .eng-meaning{display:none;color:var(--muted);font-size:14px;font-weight:600;}
-
 .quizbox{background:white;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px}
 .quizprompt{font-size:30px;font-weight:800;color:var(--navy);margin:16px 0;overflow-wrap:anywhere}
 .choices{display:grid;gap:9px}
@@ -183,6 +182,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
           <button type="button" class="known" id="mark">✓ I know this</button>
           <button type="button" class="prev" id="prev">← Previous</button>
           <button type="button" class="next" id="next">Next word →</button>
+          <button type="button" class="autoplay" id="autoPlay">▶ Auto Play</button>
         </div>
       </article>
 
@@ -473,6 +473,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var passedQuiz = loadSet(STORAGE_KEY_QUIZ);
   var passedWrite = loadSet(STORAGE_KEY_WRITE);
   var currentWriteWord = null;
+  var isAutoPlaying = false;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -636,13 +637,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       .replace(/oo{2,}/g, 'oo');
   }
 
-  function speakText(text, lang, voice, rate) {
+  function speakText(text, lang, voice, rate, onEnd) {
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang;
       u.rate = typeof rate === 'number' ? rate : 0.83;
       if (voice) u.voice = voice;
+      if (onEnd) u.onend = onEnd;
       window.speechSynthesis.speak(u);
     } catch (e) { /* ignore */ }
   }
@@ -683,6 +685,88 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       }
       speakText(parts.join(' '), 'en-US', null, 0.9);
     }
+  }
+
+  /* ----------------------------------------------------------------
+   * Auto Play Logic
+   * ---------------------------------------------------------------- */
+  function stopAutoPlay() {
+    isAutoPlaying = false;
+    var btn = $('autoPlay');
+    if (btn) {
+      btn.textContent = '▶ Auto Play';
+      btn.classList.remove('active');
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  function startAutoPlay() {
+    if (isAutoPlaying) return;
+    isAutoPlaying = true;
+    var btn = $('autoPlay');
+    if (btn) {
+      btn.textContent = '⏸ Stop Auto Play';
+      btn.classList.add('active');
+    }
+    playCurrentWordAndSentence();
+  }
+
+  function playCurrentWordAndSentence() {
+    if (!isAutoPlaying) return;
+    var w = current();
+    if (!w) { stopAutoPlay(); return; }
+
+    var headwordText = w.word;
+    var headwordLang = 'de-DE';
+    var headwordVoice = germanVoice;
+    if (!germanVoice) {
+      headwordText = ttsFallback(w.say || w.word);
+      headwordLang = 'en-US';
+      headwordVoice = null;
+    }
+
+    speakText(headwordText, headwordLang, headwordVoice, 0.83, function() {
+      if (!isAutoPlaying) return;
+
+      var sentenceText = w.de || w.word;
+      var sentenceLang = 'de-DE';
+      var sentenceVoice = germanVoice;
+
+      if (!germanVoice) {
+        var pairs = (Array.isArray(w.deSay) && w.deSay.length) ? w.deSay : [[w.word, w.say || w.word]];
+        var parts = [];
+        for (var i = 0; i < pairs.length; i++) {
+          var p = pairs[i];
+          if (Array.isArray(p) && p.length >= 2) parts.push(ttsFallback(p[1]));
+        }
+        sentenceText = parts.join(' ');
+        sentenceLang = 'en-US';
+        sentenceVoice = null;
+      }
+
+      speakText(sentenceText, sentenceLang, sentenceVoice, 0.83, function() {
+        if (!isAutoPlaying) return;
+        
+        setTimeout(function() {
+          if (!isAutoPlaying) return;
+          
+          if (!filtered.length) { stopAutoPlay(); return; }
+          
+          if (index >= filtered.length - 1) {
+            if (loadNextBatch()) {
+              render();
+              playCurrentWordAndSentence();
+              return;
+            }
+          }
+          index = (index + 1) % filtered.length;
+          render();
+          playCurrentWordAndSentence();
+        }, 1500);
+      });
+    });
   }
 
   function current() {
@@ -763,6 +847,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   function filter() {
+    stopAutoPlay(); // Stop if filtering while playing
+    
     var q = $('search').value.trim().toLowerCase();
     var lev = $('level').value;
     var kind = $('kind').value;
@@ -814,6 +900,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       row.onclick = function (e) {
         if (e.target.closest('.reveal-btn') || e.target.closest('#loadMoreBtn')) return;
 
+        stopAutoPlay();
         var target = row.getAttribute('data-word');
         for (var i = 0; i < filtered.length; i++) {
           if (filtered[i].word === target) { index = i; break; }
@@ -853,6 +940,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   function showView(view) {
+    stopAutoPlay(); // Stop when switching tabs
     window.AppContext.activeTab = view;
     
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
@@ -1032,17 +1120,28 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     btn.onclick = function () { showView(btn.getAttribute('data-view')); };
   });
 
-  $('sayWord').onclick = function () { speakHeadword(current()); };
-  $('sayExample').onclick = function () { speakSentence(current()); };
-  $('again').onclick = function () { speakHeadword(current()); };
+  $('sayWord').onclick = function () { 
+    stopAutoPlay();
+    speakHeadword(current()); 
+  };
+  $('sayExample').onclick = function () { 
+    stopAutoPlay();
+    speakSentence(current()); 
+  };
+  $('again').onclick = function () { 
+    stopAutoPlay();
+    speakHeadword(current()); 
+  };
 
   $('prev').onclick = function () {
+    stopAutoPlay();
     if (!filtered.length) return;
     index = (index - 1 + filtered.length) % filtered.length;
     render();
   };
 
   $('next').onclick = function () {
+    stopAutoPlay();
     if (!filtered.length) return;
     if (index >= filtered.length - 1) {
       if (loadNextBatch()) {
@@ -1052,6 +1151,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     }
     index = (index + 1) % filtered.length;
     render();
+  };
+
+  $('autoPlay').onclick = function () {
+    if (isAutoPlaying) {
+      stopAutoPlay();
+    } else {
+      startAutoPlay();
+    }
   };
 
   $('mark').onclick = function () {
@@ -1264,4 +1371,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-  </html>
+                                                              </html>
