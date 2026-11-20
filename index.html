@@ -803,14 +803,21 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     await speakAsync(wordText, wordLang, wordVoice);
     if (!isAutoPlaying) return;
 
-    // 2. Speak English Pronunciation
+    // 2. Speak English Meaning of the Word
+    if (w.english) {
+      if (statusEl) statusEl.textContent = "🔊 Narrating meaning: " + w.english;
+      await speakAsync("Meaning: " + w.english, 'en-US');
+      if (!isAutoPlaying) return;
+    }
+
+    // 3. Speak English Pronunciation
     if (w.say) {
       if (statusEl) statusEl.textContent = "🔊 Narrating pronunciation: " + w.say;
       await speakAsync("Pronounced as: " + w.say, 'en-US');
       if (!isAutoPlaying) return;
     }
 
-    // 3. Speak German Sentence
+    // 4. Speak German Sentence
     if (statusEl) statusEl.textContent = "🔊 Narrating sentence: " + w.de;
     var sentenceText = w.de || w.word;
     var sentenceLang = 'de-DE';
@@ -829,14 +836,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     await speakAsync(sentenceText, sentenceLang, sentenceVoice);
     if (!isAutoPlaying) return;
 
-    // 4. Speak English Translation
+    // 5. Speak English Translation of the Sentence
     if (w.en) {
       if (statusEl) statusEl.textContent = "🔊 Narrating translation: " + w.en;
       await speakAsync(w.en, 'en-US');
       if (!isAutoPlaying) return;
     }
 
-    // 5. Speak Grammar Explanation
+    // 6. Speak Grammar Explanation
     if (statusEl) statusEl.textContent = "🧠 Generating grammar explanation...";
     var grammar = await getGrammarExplanation(w);
     if (!isAutoPlaying) return;
@@ -1465,4 +1472,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-            </html>
+  </html>
