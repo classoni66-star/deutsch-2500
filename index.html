@@ -7,7 +7,7 @@
 <meta name="description" content="German vocabulary trainer with audio, quizzes, writing practice, and an AI tutor.">
 <title>Deutsch 2500 · Starter — German Vocabulary Trainer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102c67'/%3E%3Ctext x='32' y='43' font-family='system-ui,sans-serif' font-size='24' font-weight='800' text-anchor='middle' fill='white'%3EDW%3C/text%3E%3C/svg%3E">
-<!-- Puter.js for the AI Tutor -->
+<!-- Puter.js for the AI Tutor and Grammar Explanations -->
 <script src="https://js.puter.com/v2/"></script>
 <style>
 :root{--navy:#102c67;--blue:#1267d5;--cyan:#21b8e7;--ink:#172033;--muted:#667085;--paper:#f4f7fb;--line:#e3e9f2;--green:#17834e}
@@ -46,6 +46,8 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .audio-status.ok{background:#e5f7ed;color:#11643a}
 .audio-status.warn{background:#fff2e8;color:#994b10}
 .audio-status.checking{background:#f2f7ff;color:#384766}
+.autoplay-status{display:none; margin-top:8px; padding:10px 12px; border-radius:9px; font-weight:700; font-size:13px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; animation:pulse 1.5s infinite;}
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 .example{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
 .example .de{font-size:18px;font-weight:700}
 .example .en{color:var(--muted);margin-top:5px}
@@ -171,6 +173,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
           <button type="button" class="audio secondary" id="sayExample">▶ Hear example</button>
         </div>
         <div id="audioStatus" class="audio-status checking" role="status" aria-live="polite">Checking device voices…</div>
+        <div id="autoPlayStatus" class="autoplay-status" role="status" aria-live="polite"></div>
         <div class="example">
           <div class="eyebrow">In a sentence</div>
           <div class="de" id="de"></div>
@@ -465,6 +468,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var STORAGE_KEY = 'deutsch2500learned';
   var STORAGE_KEY_QUIZ = 'deutsch2500quiz';
   var STORAGE_KEY_WRITE = 'deutsch2500write';
+  var STORAGE_KEY_GRAMMAR = 'deutsch2500grammar';
   
   var words = allBatches[0].slice();
   var filtered = words.slice();
@@ -472,6 +476,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var learned = loadLearned();
   var passedQuiz = loadSet(STORAGE_KEY_QUIZ);
   var passedWrite = loadSet(STORAGE_KEY_WRITE);
+  var grammarCache = loadGrammarCache();
   var currentWriteWord = null;
   var isAutoPlaying = false;
 
@@ -501,6 +506,21 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     } catch (e) {
       return new Set();
     }
+  }
+
+  function loadGrammarCache() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY_GRAMMAR);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveGrammarCache() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_GRAMMAR, JSON.stringify(grammarCache));
+    } catch (e) {}
   }
 
   function saveSet(key, set) {
@@ -637,14 +657,29 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       .replace(/oo{2,}/g, 'oo');
   }
 
-  function speakText(text, lang, voice, rate, onEnd) {
+  function speakAsync(text, lang, voice) {
+    return new Promise(function(resolve) {
+      if (!text) { resolve(); return; }
+      try {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = lang;
+        u.rate = 0.83;
+        if (voice) u.voice = voice;
+        u.onend = resolve;
+        u.onerror = resolve;
+        window.speechSynthesis.speak(u);
+      } catch(e) { resolve(); }
+    });
+  }
+
+  function speakText(text, lang, voice, rate) {
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = lang;
       u.rate = typeof rate === 'number' ? rate : 0.83;
       if (voice) u.voice = voice;
-      if (onEnd) u.onend = onEnd;
       window.speechSynthesis.speak(u);
     } catch (e) { /* ignore */ }
   }
@@ -690,6 +725,37 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   /* ----------------------------------------------------------------
    * Auto Play Logic
    * ---------------------------------------------------------------- */
+  async function getGrammarExplanation(w) {
+    if (!w) return "";
+    if (grammarCache[w.word]) return grammarCache[w.word];
+    
+    try {
+      var prompt = `Explain in English why the word "${w.word}" is used in the German sentence "${w.de}" (meaning "${w.en}"). Focus on grammar, conjugation, case, or word order. Keep it under 30 words.`;
+      var response = await puter.ai.chat(prompt, { model: 'openai/gpt-4o-mini' });
+      
+      var text = '';
+      if (typeof response === 'string') text = response;
+      else if (response && response.message && response.message.content) {
+        if (Array.isArray(response.message.content)) {
+          text = response.message.content.map(part => part.text || '').join('');
+        } else {
+          text = response.message.content;
+        }
+      } else if (response && response.text) text = response.text;
+      
+      if (text) {
+        text = text.replace(/[*#_`]/g, '').trim();
+        grammarCache[w.word] = text;
+        saveGrammarCache();
+        return text;
+      }
+    } catch (e) {
+      console.error("Grammar generation failed:", e);
+    }
+    
+    return "This word is a " + (w.pos || "word") + " in the sentence.";
+  }
+
   function stopAutoPlay() {
     isAutoPlaying = false;
     var btn = $('autoPlay');
@@ -697,6 +763,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       btn.textContent = '▶ Auto Play';
       btn.classList.remove('active');
     }
+    var statusEl = $('autoPlayStatus');
+    if (statusEl) statusEl.style.display = 'none';
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -710,63 +778,89 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       btn.textContent = '⏸ Stop Auto Play';
       btn.classList.add('active');
     }
+    var statusEl = $('autoPlayStatus');
+    if (statusEl) statusEl.style.display = 'block';
     playCurrentWordAndSentence();
   }
 
-  function playCurrentWordAndSentence() {
+  async function playCurrentWordAndSentence() {
     if (!isAutoPlaying) return;
     var w = current();
     if (!w) { stopAutoPlay(); return; }
+    
+    var statusEl = $('autoPlayStatus');
 
-    var headwordText = w.word;
-    var headwordLang = 'de-DE';
-    var headwordVoice = germanVoice;
+    // 1. Speak German Word
+    if (statusEl) statusEl.textContent = "🔊 Narrating word: " + w.word;
+    var wordText = w.word;
+    var wordLang = 'de-DE';
+    var wordVoice = germanVoice;
     if (!germanVoice) {
-      headwordText = ttsFallback(w.say || w.word);
-      headwordLang = 'en-US';
-      headwordVoice = null;
+      wordText = ttsFallback(w.say || w.word);
+      wordLang = 'en-US';
+      wordVoice = null;
+    }
+    await speakAsync(wordText, wordLang, wordVoice);
+    if (!isAutoPlaying) return;
+
+    // 2. Speak English Pronunciation
+    if (w.say) {
+      if (statusEl) statusEl.textContent = "🔊 Narrating pronunciation: " + w.say;
+      await speakAsync("Pronounced as: " + w.say, 'en-US');
+      if (!isAutoPlaying) return;
     }
 
-    speakText(headwordText, headwordLang, headwordVoice, 0.83, function() {
-      if (!isAutoPlaying) return;
-
-      var sentenceText = w.de || w.word;
-      var sentenceLang = 'de-DE';
-      var sentenceVoice = germanVoice;
-
-      if (!germanVoice) {
-        var pairs = (Array.isArray(w.deSay) && w.deSay.length) ? w.deSay : [[w.word, w.say || w.word]];
-        var parts = [];
-        for (var i = 0; i < pairs.length; i++) {
-          var p = pairs[i];
-          if (Array.isArray(p) && p.length >= 2) parts.push(ttsFallback(p[1]));
-        }
-        sentenceText = parts.join(' ');
-        sentenceLang = 'en-US';
-        sentenceVoice = null;
+    // 3. Speak German Sentence
+    if (statusEl) statusEl.textContent = "🔊 Narrating sentence: " + w.de;
+    var sentenceText = w.de || w.word;
+    var sentenceLang = 'de-DE';
+    var sentenceVoice = germanVoice;
+    if (!germanVoice) {
+      var pairs = (Array.isArray(w.deSay) && w.deSay.length) ? w.deSay : [[w.word, w.say || w.word]];
+      var parts = [];
+      for (var i = 0; i < pairs.length; i++) {
+        var p = pairs[i];
+        if (Array.isArray(p) && p.length >= 2) parts.push(ttsFallback(p[1]));
       }
+      sentenceText = parts.join(' ');
+      sentenceLang = 'en-US';
+      sentenceVoice = null;
+    }
+    await speakAsync(sentenceText, sentenceLang, sentenceVoice);
+    if (!isAutoPlaying) return;
 
-      speakText(sentenceText, sentenceLang, sentenceVoice, 0.83, function() {
-        if (!isAutoPlaying) return;
-        
-        setTimeout(function() {
-          if (!isAutoPlaying) return;
-          
-          if (!filtered.length) { stopAutoPlay(); return; }
-          
-          if (index >= filtered.length - 1) {
-            if (loadNextBatch()) {
-              render();
-              playCurrentWordAndSentence();
-              return;
-            }
-          }
-          index = (index + 1) % filtered.length;
+    // 4. Speak English Translation
+    if (w.en) {
+      if (statusEl) statusEl.textContent = "🔊 Narrating translation: " + w.en;
+      await speakAsync(w.en, 'en-US');
+      if (!isAutoPlaying) return;
+    }
+
+    // 5. Speak Grammar Explanation
+    if (statusEl) statusEl.textContent = "🧠 Generating grammar explanation...";
+    var grammar = await getGrammarExplanation(w);
+    if (!isAutoPlaying) return;
+    if (grammar) {
+      if (statusEl) statusEl.textContent = "🔊 Narrating explanation: " + grammar;
+      await speakAsync(grammar, 'en-US');
+      if (!isAutoPlaying) return;
+    }
+
+    if (statusEl) statusEl.textContent = "Moving to next word...";
+    setTimeout(function() {
+      if (!isAutoPlaying) return;
+      if (!filtered.length) { stopAutoPlay(); return; }
+      if (index >= filtered.length - 1) {
+        if (loadNextBatch()) {
           render();
           playCurrentWordAndSentence();
-        }, 1500);
-      });
-    });
+          return;
+        }
+      }
+      index = (index + 1) % filtered.length;
+      render();
+      playCurrentWordAndSentence();
+    }, 1500);
   }
 
   function current() {
@@ -847,7 +941,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   function filter() {
-    stopAutoPlay(); // Stop if filtering while playing
+    stopAutoPlay();
     
     var q = $('search').value.trim().toLowerCase();
     var lev = $('level').value;
@@ -940,7 +1034,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   function showView(view) {
-    stopAutoPlay(); // Stop when switching tabs
+    stopAutoPlay();
     window.AppContext.activeTab = view;
     
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
@@ -1371,4 +1465,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-                                                              </html>
+            </html>
