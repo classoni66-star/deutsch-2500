@@ -7,7 +7,6 @@
 <meta name="description" content="German vocabulary trainer with audio, quizzes, writing practice, and an AI tutor.">
 <title>Deutsch 2500 · Starter — German Vocabulary Trainer</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23102c67'/%3E%3Ctext x='32' y='43' font-family='system-ui,sans-serif' font-size='24' font-weight='800' text-anchor='middle' fill='white'%3EDW%3C/text%3E%3C/svg%3E">
-<!-- Puter.js for the AI Tutor and Grammar Explanations -->
 <script src="https://js.puter.com/v2/"></script>
 <style>
 :root{--navy:#102c67;--blue:#1267d5;--cyan:#21b8e7;--ink:#172033;--muted:#667085;--paper:#f4f7fb;--line:#e3e9f2;--green:#17834e}
@@ -96,7 +95,6 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-height:1.6}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}.rows{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:10px}.stat b{font-size:19px}}
 
-/* AI Tutor Floating Button & Panel */
 #aiTutorBtn {position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:var(--navy);color:white;border:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;z-index:1000;transition:transform 0.2s;}
 #aiTutorBtn:hover {transform:scale(1.05);}
 #aiTutorPanel {position:fixed;bottom:96px;right:24px;width:360px;max-width:calc(100vw - 48px);height:520px;max-height:calc(100vh - 120px);background:white;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.2);display:none;flex-direction:column;z-index:1000;border:1px solid var(--line);overflow:hidden;}
@@ -207,7 +205,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
         </div>
 
         <p><b>Audio accuracy:</b> A German voice gives accurate pronunciation. Without one, the app sends the English respelling to the device voice — an approximation, not a perfect German sound.</p>
-        <p><b>Progress:</b> Your learned words are saved on this device.</p>
+        <p><b>Progress:</b> Your learned words are saved on this device. Words are downloaded once on first use and then stored on your phone.</p>
       </aside>
     </div>
   </section>
@@ -248,12 +246,11 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   </section>
 
   <footer>
-    Starter set — 158 curated A1 words. The full 2,500-word frequency-ranked collection is the next milestone.<br>
+    2,500-word German frequency list · downloaded once on first use, then stored on your device.<br>
     Pronunciation is English respelling for beginners. <b>kh</b> = soft ch, <b>KH</b> = throaty ch, <b>Ö/Ü</b> = rounded vowels (see key).
   </footer>
 </main>
 
-<!-- AI Tutor Floating Button & Panel -->
 <button id="aiTutorBtn" aria-label="Open AI Tutor">🧠</button>
 <div id="aiTutorPanel">
   <div class="ai-header">
@@ -281,9 +278,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 (function () {
   'use strict';
 
-  /* ----------------------------------------------------------------
-   * Global Context Object (For the AI Tutor)
-   * ---------------------------------------------------------------- */
   window.AppContext = {
     activeTab: 'learn',
     word: null,
@@ -292,186 +286,52 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   };
 
   /* ----------------------------------------------------------------
-   * Vocabulary Data Batches
+   * REMOTE DATA SOURCE
    * ---------------------------------------------------------------- */
-  var batch1 = [
-    {"word": "ich", "english": "I", "pos": "pron", "say": "ikh", "visual": "👤", "de": "Ich lerne Deutsch.", "en": "I am learning German.", "deSay": [["Ich", "ikh"], ["lerne", "LAIR-nuh"], ["Deutsch", "DOYTCH"]], "level": "A1"},
-    {"word": "du", "english": "you (informal)", "pos": "pron", "say": "doo", "visual": "🫵", "de": "Wie heißt du?", "en": "What is your name?", "deSay": [["Wie", "vee"], ["heißt", "HYST"], ["du", "doo"]], "level": "A1"},
-    {"word": "er", "english": "he", "pos": "pron", "say": "ehr", "visual": "👨", "de": "Er wohnt in Berlin.", "en": "He lives in Berlin.", "deSay": [["Er", "ehr"], ["wohnt", "vohnt"], ["in", "in"], ["Berlin", "behr-LEEN"]], "level": "A1"},
-    {"word": "sie", "english": "she; they; you (formal)", "pos": "pron", "say": "zee", "visual": "👩", "de": "Sie spricht Deutsch.", "en": "She speaks German.", "deSay": [["Sie", "zee"], ["spricht", "shprikht"], ["Deutsch", "DOYTCH"]], "level": "A1"},
-    {"word": "wir", "english": "we", "pos": "pron", "say": "veer", "visual": "👥", "de": "Wir lernen zusammen.", "en": "We are learning together.", "deSay": [["Wir", "veer"], ["lernen", "LAIR-nen"], ["zusammen", "tsoo-ZAH-men"]], "level": "A1"},
-    {"word": "sein", "english": "to be", "pos": "verb", "say": "zine", "visual": "✨", "de": "Ich bin Student.", "en": "I am a student.", "deSay": [["Ich", "ikh"], ["bin", "bin"], ["Student", "shtoo-DENT"]], "level": "A1"},
-    {"word": "haben", "english": "to have", "pos": "verb", "say": "HAH-buhn", "visual": "🤲", "de": "Ich habe Zeit.", "en": "I have time.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["Zeit", "TSYTE"]], "level": "A1"},
-    {"word": "werden", "english": "to become; will", "pos": "verb", "say": "VEHR-duhn", "visual": "🔄", "de": "Es wird besser.", "en": "It is getting better.", "deSay": [["Es", "es"], ["wird", "virt"], ["besser", "BESS-suh"]], "level": "A1"},
-    {"word": "können", "english": "can; to be able to", "pos": "verb", "say": "KÖN-nen", "visual": "💪", "de": "Ich kann schwimmen.", "en": "I can swim.", "deSay": [["Ich", "ikh"], ["kann", "kan"], ["schwimmen", "SHVIM-men"]], "level": "A1"},
-    {"word": "müssen", "english": "must; to have to", "pos": "verb", "say": "MÜS-sen", "visual": "❗", "de": "Ich muss arbeiten.", "en": "I have to work.", "deSay": [["Ich", "ikh"], ["muss", "muss"], ["arbeiten", "AR-bye-tn"]], "level": "A1"},
-    {"word": "wollen", "english": "to want", "pos": "verb", "say": "VOL-len", "visual": "🎯", "de": "Wir wollen gehen.", "en": "We want to go.", "deSay": [["Wir", "veer"], ["wollen", "VOL-len"], ["gehen", "GEH-en"]], "level": "A1"},
-    {"word": "machen", "english": "to do; to make", "pos": "verb", "say": "MAH-KHuhn", "visual": "🛠️", "de": "Was machst du heute?", "en": "What are you doing today?", "deSay": [["Was", "vahs"], ["machst", "mahKHst"], ["du", "doo"], ["heute", "HOY-tuh"]], "level": "A1"},
-    {"word": "gehen", "english": "to go; to walk", "pos": "verb", "say": "GEH-en", "visual": "🚶", "de": "Ich gehe nach Hause.", "en": "I am going home.", "deSay": [["Ich", "ikh"], ["gehe", "GEH-uh"], ["nach", "nahKH"], ["Hause", "HOW-zuh"]], "level": "A1"},
-    {"word": "kommen", "english": "to come", "pos": "verb", "say": "KOM-men", "visual": "🚶", "de": "Kommst du morgen?", "en": "Are you coming tomorrow?", "deSay": [["Kommst", "komst"], ["du", "doo"], ["morgen", "MOR-gen"]], "level": "A1"},
-    {"word": "sagen", "english": "to say; to tell", "pos": "verb", "say": "ZAH-gen", "visual": "🗣️", "de": "Was soll ich sagen?", "en": "What should I say?", "deSay": [["Was", "vahs"], ["soll", "zol"], ["ich", "ikh"], ["sagen", "ZAH-gen"]], "level": "A1"},
-    {"word": "wissen", "english": "to know (a fact)", "pos": "verb", "say": "VIS-sen", "visual": "🧠", "de": "Ich weiß es nicht.", "en": "I don't know.", "deSay": [["Ich", "ikh"], ["weiß", "VICE"], ["es", "es"], ["nicht", "nikht"]], "level": "A1"},
-    {"word": "sehen", "english": "to see", "pos": "verb", "say": "ZEH-en", "visual": "👀", "de": "Ich sehe einen Vogel.", "en": "I see a bird.", "deSay": [["Ich", "ikh"], ["sehe", "ZEH-uh"], ["einen", "EYE-nen"], ["Vogel", "FOH-gul"]], "level": "A1"},
-    {"word": "geben", "english": "to give", "pos": "verb", "say": "GEH-ben", "visual": "🎁", "de": "Gib mir bitte das Buch.", "en": "Please give me the book.", "deSay": [["Gib", "gip"], ["mir", "meer"], ["bitte", "BIT-tuh"], ["das", "dahs"], ["Buch", "BOOKH"]], "level": "A1"},
-    {"word": "nehmen", "english": "to take", "pos": "verb", "say": "NEH-men", "visual": "🤲", "de": "Ich nehme den Bus.", "en": "I take the bus.", "deSay": [["Ich", "ikh"], ["nehme", "NEH-muh"], ["den", "dehn"], ["Bus", "buss"]], "level": "A1"},
-    {"word": "sprechen", "english": "to speak", "pos": "verb", "say": "SHPREH-khen", "visual": "💬", "de": "Sprechen Sie Englisch?", "en": "Do you speak English?", "deSay": [["Sprechen", "SHPREH-khen"], ["Sie", "zee"], ["Englisch", "ENG-lish"]], "level": "A1"},
-    {"word": "gut", "english": "good", "pos": "adj", "say": "goot", "visual": "👍", "de": "Das ist sehr gut.", "en": "That is very good.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["sehr", "zehr"], ["gut", "goot"]], "level": "A1"},
-    {"word": "groß", "english": "big; tall", "pos": "adj", "say": "grohss", "visual": "📏", "de": "Das Haus ist groß.", "en": "The house is big.", "deSay": [["Das", "dahs"], ["Haus", "howss"], ["ist", "ist"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "klein", "english": "small", "pos": "adj", "say": "kline", "visual": "🐜", "de": "Der Hund ist klein.", "en": "The dog is small.", "deSay": [["Der", "dehr"], ["Hund", "hunt"], ["ist", "ist"], ["klein", "kline"]], "level": "A1"},
-    {"word": "neu", "english": "new", "pos": "adj", "say": "noy", "visual": "🆕", "de": "Ich habe ein neues Handy.", "en": "I have a new phone.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["ein", "ine"], ["neues", "NOY-es"], ["Handy", "HEN-dee"]], "level": "A1"},
-    {"word": "schön", "english": "beautiful; nice", "pos": "adj", "say": "SHÖN", "visual": "🌷", "de": "Das ist ein schöner Tag.", "en": "It is a beautiful day.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["ein", "ine"], ["schöner", "SHÖ-ner"], ["Tag", "tahk"]], "level": "A1"},
-    {"word": "wichtig", "english": "important", "pos": "adj", "say": "VIkh-tikh", "visual": "⭐", "de": "Deutsch ist wichtig für mich.", "en": "German is important to me.", "deSay": [["Deutsch", "DOYTCH"], ["ist", "ist"], ["wichtig", "VIkh-tikh"], ["für", "FÜÜR"], ["mich", "mikh"]], "level": "A1"},
-    {"word": "der Mann", "english": "man", "pos": "noun", "say": "dehr mahn", "visual": "👨", "de": "Der Mann arbeitet hier.", "en": "The man works here.", "deSay": [["Der", "dehr"], ["Mann", "mahn"], ["arbeitet", "AR-bye-tuht"], ["hier", "heer"]], "level": "A1"},
-    {"word": "die Frau", "english": "woman", "pos": "noun", "say": "dee frow", "visual": "👩", "de": "Die Frau liest ein Buch.", "en": "The woman is reading a book.", "deSay": [["Die", "dee"], ["Frau", "frow"], ["liest", "leest"], ["ein", "ine"], ["Buch", "BOOKH"]], "level": "A1"},
-    {"word": "das Kind", "english": "child", "pos": "noun", "say": "dahs kint", "visual": "🧒", "de": "Das Kind spielt draußen.", "en": "The child is playing outside.", "deSay": [["Das", "dahs"], ["Kind", "kint"], ["spielt", "shpeelt"], ["draußen", "DROW-sen"]], "level": "A1"},
-    {"word": "die Familie", "english": "family", "pos": "noun", "say": "dee fah-MEE-lee-uh", "visual": "👨‍👩‍👧", "de": "Meine Familie ist groß.", "en": "My family is big.", "deSay": [["Meine", "MINE-uh"], ["Familie", "fah-MEE-lee-uh"], ["ist", "ist"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "das Haus", "english": "house", "pos": "noun", "say": "dahs howss", "visual": "🏠", "de": "Das Haus ist sehr alt.", "en": "The house is very old.", "deSay": [["Das", "dahs"], ["Haus", "howss"], ["ist", "ist"], ["sehr", "zehr"], ["alt", "ahlt"]], "level": "A1"},
-    {"word": "die Schule", "english": "school", "pos": "noun", "say": "dee SHOO-luh", "visual": "🏫", "de": "Die Schule beginnt um acht.", "en": "School starts at eight.", "deSay": [["Die", "dee"], ["Schule", "SHOO-luh"], ["beginnt", "buh-GINT"], ["um", "um"], ["acht", "ahKHt"]], "level": "A1"},
-    {"word": "das Buch", "english": "book", "pos": "noun", "say": "dahs BOOKH", "visual": "📘", "de": "Ich lese ein Buch.", "en": "I am reading a book.", "deSay": [["Ich", "ikh"], ["lese", "LEH-zuh"], ["ein", "ine"], ["Buch", "BOOKH"]], "level": "A1"},
-    {"word": "der Fisch", "english": "fish", "pos": "noun", "say": "dehr fish", "visual": "🐟", "de": "Der Fisch schwimmt im Wasser.", "en": "The fish is swimming in the water.", "deSay": [["Der", "dehr"], ["Fisch", "fish"], ["schwimmt", "shvimt"], ["im", "im"], ["Wasser", "VAH-suh"]], "level": "A1"},
-    {"word": "das Wasser", "english": "water", "pos": "noun", "say": "dahs VAH-suh", "visual": "💧", "de": "Ich trinke Wasser.", "en": "I drink water.", "deSay": [["Ich", "ikh"], ["trinke", "TRIN-kuh"], ["Wasser", "VAH-suh"]], "level": "A1"},
-    {"word": "das Brot", "english": "bread", "pos": "noun", "say": "dahs broht", "visual": "🍞", "de": "Wir kaufen Brot.", "en": "We are buying bread.", "deSay": [["Wir", "veer"], ["kaufen", "KOW-fen"], ["Brot", "broht"]], "level": "A1"},
-    {"word": "der Apfel", "english": "apple", "pos": "noun", "say": "dehr AHP-fel", "visual": "🍎", "de": "Der Apfel ist rot.", "en": "The apple is red.", "deSay": [["Der", "dehr"], ["Apfel", "AHP-fel"], ["ist", "ist"], ["rot", "roht"]], "level": "A1"},
-    {"word": "die Zeit", "english": "time", "pos": "noun", "say": "dee TSYTE", "visual": "⏰", "de": "Ich habe heute keine Zeit.", "en": "I have no time today.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["heute", "HOY-tuh"], ["keine", "KINE-uh"], ["Zeit", "TSYTE"]], "level": "A1"},
-    {"word": "der Tag", "english": "day", "pos": "noun", "say": "dehr tahk", "visual": "🌞", "de": "Guten Tag!", "en": "Good afternoon!", "deSay": [["Guten", "GOO-ten"], ["Tag", "tahk"]], "level": "A1"},
-    {"word": "die Arbeit", "english": "work; job", "pos": "noun", "say": "dee AR-bite", "visual": "💼", "de": "Meine Arbeit beginnt um neun.", "en": "My work starts at nine.", "deSay": [["Meine", "MINE-uh"], ["Arbeit", "AR-bite"], ["beginnt", "buh-GINT"], ["um", "um"], ["neun", "noyn"]], "level": "A1"},
-    {"word": "die Stadt", "english": "city", "pos": "noun", "say": "dee shtaht", "visual": "🏙️", "de": "Die Stadt ist sehr groß.", "en": "The city is very big.", "deSay": [["Die", "dee"], ["Stadt", "shtaht"], ["ist", "ist"], ["sehr", "zehr"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "heute", "english": "today", "pos": "adv", "say": "HOY-tuh", "visual": "📅", "de": "Heute lerne ich Deutsch.", "en": "Today I am learning German.", "deSay": [["Heute", "HOY-tuh"], ["lerne", "LAIR-nuh"], ["ich", "ikh"], ["Deutsch", "DOYTCH"]], "level": "A1"},
-    {"word": "morgen", "english": "tomorrow; morning", "pos": "adv", "say": "MOR-gen", "visual": "🌅", "de": "Morgen habe ich Zeit.", "en": "Tomorrow I have time.", "deSay": [["Morgen", "MOR-gen"], ["habe", "HAH-buh"], ["ich", "ikh"], ["Zeit", "TSYTE"]], "level": "A1"},
-    {"word": "jetzt", "english": "now", "pos": "adv", "say": "yetst", "visual": "⏱️", "de": "Ich muss jetzt gehen.", "en": "I have to go now.", "deSay": [["Ich", "ikh"], ["muss", "muss"], ["jetzt", "yetst"], ["gehen", "GEH-en"]], "level": "A1"},
-    {"word": "immer", "english": "always", "pos": "adv", "say": "IM-muh", "visual": "🔁", "de": "Er kommt immer pünktlich.", "en": "He is always on time.", "deSay": [["Er", "ehr"], ["kommt", "komt"], ["immer", "IM-muh"], ["pünktlich", "PÜNGKT-likh"]], "level": "A1"},
-    {"word": "nicht", "english": "not", "pos": "part", "say": "nikht", "visual": "🚫", "de": "Ich verstehe das nicht.", "en": "I do not understand that.", "deSay": [["Ich", "ikh"], ["verstehe", "fehr-SHTEH-uh"], ["das", "dahs"], ["nicht", "nikht"]], "level": "A1"},
-    {"word": "und", "english": "and", "pos": "conj", "say": "unt", "visual": "➕", "de": "Du und ich lernen Deutsch.", "en": "You and I are learning German.", "deSay": [["Du", "doo"], ["und", "unt"], ["ich", "ikh"], ["lernen", "LAIR-nen"], ["Deutsch", "DOYTCH"]], "level": "A1"},
-    {"word": "aber", "english": "but", "pos": "conj", "say": "AH-buh", "visual": "↔️", "de": "Ich bin müde, aber glücklich.", "en": "I am tired but happy.", "deSay": [["Ich", "ikh"], ["bin", "bin"], ["müde", "MÜ-duh"], ["aber", "AH-buh"], ["glücklich", "GLÜK-likh"]], "level": "A1"},
-    {"word": "mit", "english": "with", "pos": "prep", "say": "mit", "visual": "🤝", "de": "Ich komme mit dir.", "en": "I am coming with you.", "deSay": [["Ich", "ikh"], ["komme", "KOM-muh"], ["mit", "mit"], ["dir", "deer"]], "level": "A1"},
-    {"word": "für", "english": "for", "pos": "prep", "say": "FÜÜR", "visual": "🎁", "de": "Das Geschenk ist für dich.", "en": "The gift is for you.", "deSay": [["Das", "dahs"], ["Geschenk", "guh-SHENK"], ["ist", "ist"], ["für", "FÜÜR"], ["dich", "dikh"]], "level": "A1"},
-    {"word": "in", "english": "in; into", "pos": "prep", "say": "in", "visual": "📍", "de": "Ich wohne in Uganda.", "en": "I live in Uganda.", "deSay": [["Ich", "ikh"], ["wohne", "VOH-nuh"], ["in", "in"], ["Uganda", "oo-GAHN-dah"]], "level": "A1"},
-    {"word": "auf", "english": "on; onto", "pos": "prep", "say": "owf", "visual": "⬆️", "de": "Das Buch liegt auf dem Tisch.", "en": "The book is on the table.", "deSay": [["Das", "dahs"], ["Buch", "BOOKH"], ["liegt", "leekt"], ["auf", "owf"], ["dem", "dehm"], ["Tisch", "tish"]], "level": "A1"},
-    {"word": "ja", "english": "yes", "pos": "part", "say": "yah", "visual": "✅", "de": "Ja, ich verstehe.", "en": "Yes, I understand.", "deSay": [["Ja", "yah"], ["ich", "ikh"], ["verstehe", "fehr-SHTEH-uh"]], "level": "A1"},
-    {"word": "nein", "english": "no", "pos": "part", "say": "nine", "visual": "❌", "de": "Nein, heute nicht.", "en": "No, not today.", "deSay": [["Nein", "nine"], ["heute", "HOY-tuh"], ["nicht", "nikht"]], "level": "A1"},
-    {"word": "bitte", "english": "please; you're welcome", "pos": "part", "say": "BIT-tuh", "visual": "🙏", "de": "Ein Wasser, bitte.", "en": "A water, please.", "deSay": [["Ein", "ine"], ["Wasser", "VAH-suh"], ["bitte", "BIT-tuh"]], "level": "A1"},
-    {"word": "danke", "english": "thank you", "pos": "part", "say": "DAHNG-kuh", "visual": "💛", "de": "Danke für deine Hilfe.", "en": "Thank you for your help.", "deSay": [["Danke", "DAHNG-kuh"], ["für", "FÜÜR"], ["deine", "DINE-uh"], ["Hilfe", "HIL-fuh"]], "level": "A1"},
-    {"word": "hallo", "english": "hello", "pos": "interj", "say": "hah-LOH", "visual": "👋", "de": "Hallo! Wie geht es dir?", "en": "Hello! How are you?", "deSay": [["Hallo", "hah-LOH"], ["Wie", "vee"], ["geht", "gayt"], ["es", "es"], ["dir", "deer"]], "level": "A1"},
-    {"word": "Euro", "english": "euro", "pos": "noun", "say": "OY-roh", "visual": "💶", "de": "Das kostet zehn Euro.", "en": "That costs ten euros.", "deSay": [["Das", "dahs"], ["kostet", "KOS-tuht"], ["zehn", "tsehn"], ["Euro", "OY-roh"]], "level": "A1"}
+  var DATA_URL = 'https://raw.githubusercontent.com/vbvss199/Language-Learning-decks/main/german/german.json';
+
+  /* Small fallback list in case the fetch fails on first run (30 words) */
+  var FALLBACK_WORDS = [
+    {word:'ich',english:'I',pos:'pron',say:'ikh',visual:'👤',de:'Ich lerne Deutsch.',en:'I am learning German.',deSay:[['Ich','ikh'],['lerne','LAIR-nuh'],['Deutsch','DOYTCH']],level:'A1'},
+    {word:'du',english:'you (informal)',pos:'pron',say:'doo',visual:'🫵',de:'Wie heißt du?',en:'What is your name?',deSay:[['Wie','vee'],['heißt','HYST'],['du','doo']],level:'A1'},
+    {word:'er',english:'he',pos:'pron',say:'ehr',visual:'👨',de:'Er wohnt in Berlin.',en:'He lives in Berlin.',deSay:[['Er','ehr'],['wohnt','vohnt'],['in','in'],['Berlin','behr-LEEN']],level:'A1'},
+    {word:'sie',english:'she; they; you (formal)',pos:'pron',say:'zee',visual:'👩',de:'Sie spricht Deutsch.',en:'She speaks German.',deSay:[['Sie','zee'],['spricht','shprikht'],['Deutsch','DOYTCH']],level:'A1'},
+    {word:'wir',english:'we',pos:'pron',say:'veer',visual:'👥',de:'Wir lernen zusammen.',en:'We are learning together.',deSay:[['Wir','veer'],['lernen','LAIR-nen'],['zusammen','tsoo-ZAH-men']],level:'A1'},
+    {word:'sein',english:'to be',pos:'verb',say:'zine',visual:'✨',de:'Ich bin Student.',en:'I am a student.',deSay:[['Ich','ikh'],['bin','bin'],['Student','shtoo-DENT']],level:'A1'},
+    {word:'haben',english:'to have',pos:'verb',say:'HAH-buhn',visual:'🤲',de:'Ich habe Zeit.',en:'I have time.',deSay:[['Ich','ikh'],['habe','HAH-buh'],['Zeit','TSYTE']],level:'A1'},
+    {word:'werden',english:'to become; will',pos:'verb',say:'VEHR-duhn',visual:'🔄',de:'Es wird besser.',en:'It is getting better.',deSay:[['Es','es'],['wird','virt'],['besser','BESS-suh']],level:'A1'},
+    {word:'können',english:'can; to be able to',pos:'verb',say:'KÖN-nen',visual:'💪',de:'Ich kann schwimmen.',en:'I can swim.',deSay:[['Ich','ikh'],['kann','kan'],['schwimmen','SHVIM-men']],level:'A1'},
+    {word:'müssen',english:'must; to have to',pos:'verb',say:'MÜS-sen',visual:'❗',de:'Ich muss arbeiten.',en:'I have to work.',deSay:[['Ich','ikh'],['muss','muss'],['arbeiten','AR-bye-tn']],level:'A1'},
+    {word:'wollen',english:'to want',pos:'verb',say:'VOL-len',visual:'🎯',de:'Wir wollen gehen.',en:'We want to go.',deSay:[['Wir','veer'],['wollen','VOL-len'],['gehen','GEH-en']],level:'A1'},
+    {word:'machen',english:'to do; to make',pos:'verb',say:'MAH-KHuhn',visual:'🛠️',de:'Was machst du heute?',en:'What are you doing today?',deSay:[['Was','vahs'],['machst','mahKHst'],['du','doo'],['heute','HOY-tuh']],level:'A1'},
+    {word:'gehen',english:'to go; to walk',pos:'verb',say:'GEH-en',visual:'🚶',de:'Ich gehe nach Hause.',en:'I am going home.',deSay:[['Ich','ikh'],['gehe','GEH-uh'],['nach','nahKH'],['Hause','HOW-zuh']],level:'A1'},
+    {word:'kommen',english:'to come',pos:'verb',say:'KOM-men',visual:'🚶',de:'Kommst du morgen?',en:'Are you coming tomorrow?',deSay:[['Kommst','komst'],['du','doo'],['morgen','MOR-gen']],level:'A1'},
+    {word:'sagen',english:'to say; to tell',pos:'verb',say:'ZAH-gen',visual:'🗣️',de:'Was soll ich sagen?',en:'What should I say?',deSay:[['Was','vahs'],['soll','zol'],['ich','ikh'],['sagen','ZAH-gen']],level:'A1'},
+    {word:'wissen',english:'to know (a fact)',pos:'verb',say:'VIS-sen',visual:'🧠',de:'Ich weiß es nicht.',en:"I don't know.",deSay:[['Ich','ikh'],['weiß','VICE'],['es','es'],['nicht','nikht']],level:'A1'},
+    {word:'sehen',english:'to see',pos:'verb',say:'ZEH-en',visual:'👀',de:'Ich sehe einen Vogel.',en:'I see a bird.',deSay:[['Ich','ikh'],['sehe','ZEH-uh'],['einen','EYE-nen'],['Vogel','FOH-gul']],level:'A1'},
+    {word:'geben',english:'to give',pos:'verb',say:'GEH-ben',visual:'🎁',de:'Gib mir bitte das Buch.',en:'Please give me the book.',deSay:[['Gib','gip'],['mir','meer'],['bitte','BIT-tuh'],['das','dahs'],['Buch','BOOKH']],level:'A1'},
+    {word:'nehmen',english:'to take',pos:'verb',say:'NEH-men',visual:'🤲',de:'Ich nehme den Bus.',en:'I take the bus.',deSay:[['Ich','ikh'],['nehme','NEH-muh'],['den','dehn'],['Bus','buss']],level:'A1'},
+    {word:'sprechen',english:'to speak',pos:'verb',say:'SHPREH-khen',visual:'💬',de:'Sprechen Sie Englisch?',en:'Do you speak English?',deSay:[['Sprechen','SHPREH-khen'],['Sie','zee'],['Englisch','ENG-lish']],level:'A1'},
+    {word:'gut',english:'good',pos:'adj',say:'goot',visual:'👍',de:'Das ist sehr gut.',en:'That is very good.',deSay:[['Das','dahs'],['ist','ist'],['sehr','zehr'],['gut','goot']],level:'A1'},
+    {word:'groß',english:'big; tall',pos:'adj',say:'grohss',visual:'📏',de:'Das Haus ist groß.',en:'The house is big.',deSay:[['Das','dahs'],['Haus','howss'],['ist','ist'],['groß','grohss']],level:'A1'},
+    {word:'klein',english:'small',pos:'adj',say:'kline',visual:'🐜',de:'Der Hund ist klein.',en:'The dog is small.',deSay:[['Der','dehr'],['Hund','hunt'],['ist','ist'],['klein','kline']],level:'A1'},
+    {word:'neu',english:'new',pos:'adj',say:'noy',visual:'🆕',de:'Ich habe ein neues Handy.',en:'I have a new phone.',deSay:[['Ich','ikh'],['habe','HAH-buh'],['ein','ine'],['neues','NOY-es'],['Handy','HEN-dee']],level:'A1'},
+    {word:'schön',english:'beautiful; nice',pos:'adj',say:'SHÖN',visual:'🌷',de:'Das ist ein schöner Tag.',en:'It is a beautiful day.',deSay:[['Das','dahs'],['ist','ist'],['ein','ine'],['schöner','SHÖ-ner'],['Tag','tahk']],level:'A1'},
+    {word:'wichtig',english:'important',pos:'adj',say:'VIkh-tikh',visual:'⭐',de:'Deutsch ist wichtig für mich.',en:'German is important to me.',deSay:[['Deutsch','DOYTCH'],['ist','ist'],['wichtig','VIkh-tikh'],['für','FÜÜR'],['mich','mikh']],level:'A1'},
+    {word:'der Mann',english:'man',pos:'noun',say:'dehr mahn',visual:'👨',de:'Der Mann arbeitet hier.',en:'The man works here.',deSay:[['Der','dehr'],['Mann','mahn'],['arbeitet','AR-bye-tuht'],['hier','heer']],level:'A1'},
+    {word:'die Frau',english:'woman',pos:'noun',say:'dee frow',visual:'👩',de:'Die Frau liest ein Buch.',en:'The woman is reading a book.',deSay:[['Die','dee'],['Frau','frow'],['liest','leest'],['ein','ine'],['Buch','BOOKH']],level:'A1'},
+    {word:'das Kind',english:'child',pos:'noun',say:'dahs kint',visual:'🧒',de:'Das Kind spielt draußen.',en:'The child is playing outside.',deSay:[['Das','dahs'],['Kind','kint'],['spielt','shpeelt'],['draußen','DROW-sen']],level:'A1'},
+    {word:'die Familie',english:'family',pos:'noun',say:'dee fah-MEE-lee-uh',visual:'👨‍👩‍👧',de:'Meine Familie ist groß.',en:'My family is big.',deSay:[['Meine','MINE-uh'],['Familie','fah-MEE-lee-uh'],['ist','ist'],['groß','grohss']],level:'A1'}
   ];
 
-  var batch2 = [
-    {"word": "die Katze", "english": "cat", "pos": "noun", "say": "dee KAT-suh", "visual": "🐱", "de": "Die Katze schläft.", "en": "The cat is sleeping.", "deSay": [["Die", "dee"], ["Katze", "KAT-suh"], ["schläft", "shlayft"]], "level": "A1"},
-    {"word": "der Hund", "english": "dog", "pos": "noun", "say": "dehr hunt", "visual": "🐶", "de": "Der Hund bellt.", "en": "The dog is barking.", "deSay": [["Der", "dehr"], ["Hund", "hunt"], ["bellt", "belt"]], "level": "A1"},
-    {"word": "die Sonne", "english": "sun", "pos": "noun", "say": "dee ZON-nuh", "visual": "☀️", "de": "Die Sonne scheint.", "en": "The sun is shining.", "deSay": [["Die", "dee"], ["Sonne", "ZON-nuh"], ["scheint", "shynt"]], "level": "A1"},
-    {"word": "der Mond", "english": "moon", "pos": "noun", "say": "dehr mohnt", "visual": "🌙", "de": "Der Mond ist hell.", "en": "The moon is bright.", "deSay": [["Der", "dehr"], ["Mond", "mohnt"], ["ist", "ist"], ["hell", "hel"]], "level": "A1"},
-    {"word": "das Auto", "english": "car", "pos": "noun", "say": "dahs OW-toh", "visual": "🚗", "de": "Das Auto ist neu.", "en": "The car is new.", "deSay": [["Das", "dahs"], ["Auto", "OW-toh"], ["ist", "ist"], ["neu", "noy"]], "level": "A1"},
-    {"word": "fahren", "english": "to drive", "pos": "verb", "say": "FAH-ren", "visual": "🚗", "de": "Ich fahre nach Berlin.", "en": "I am driving to Berlin.", "deSay": [["Ich", "ikh"], ["fahre", "FAH-ruh"], ["nach", "nahKH"], ["Berlin", "behr-LEEN"]], "level": "A1"},
-    {"word": "fliegen", "english": "to fly", "pos": "verb", "say": "FLEE-gen", "visual": "✈️", "de": "Wir fliegen nach London.", "en": "We are flying to London.", "deSay": [["Wir", "veer"], ["fliegen", "FLEE-gen"], ["nach", "nahKH"], ["London", "LON-don"]], "level": "A1"},
-    {"word": "essen", "english": "to eat", "pos": "verb", "say": "ES-sen", "visual": "🍽️", "de": "Ich esse einen Apfel.", "en": "I am eating an apple.", "deSay": [["Ich", "ikh"], ["esse", "ES-suh"], ["einen", "EYE-nen"], ["Apfel", "AHP-fel"]], "level": "A1"},
-    {"word": "trinken", "english": "to drink", "pos": "verb", "say": "TRIN-ken", "visual": "🥤", "de": "Er trinkt Wasser.", "en": "He is drinking water.", "deSay": [["Er", "ehr"], ["trinkt", "trinkt"], ["Wasser", "VAH-suh"]], "level": "A1"},
-    {"word": "das Essen", "english": "food", "pos": "noun", "say": "dahs ES-sen", "visual": "🍲", "de": "Das Essen ist gut.", "en": "The food is good.", "deSay": [["Das", "dahs"], ["Essen", "ES-sen"], ["ist", "ist"], ["gut", "goot"]], "level": "A1"},
-    {"word": "der Tisch", "english": "table", "pos": "noun", "say": "dehr tish", "visual": "🪑", "de": "Der Tisch ist groß.", "en": "The table is big.", "deSay": [["Der", "dehr"], ["Tisch", "tish"], ["ist", "ist"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "der Stuhl", "english": "chair", "pos": "noun", "say": "dehr shtool", "visual": "🪑", "de": "Der Stuhl ist bequem.", "en": "The chair is comfortable.", "deSay": [["Der", "dehr"], ["Stuhl", "shtool"], ["ist", "ist"], ["bequem", "buh-KVAME"]], "level": "A1"},
-    {"word": "die Tür", "english": "door", "pos": "noun", "say": "dee tewr", "visual": "🚪", "de": "Die Tür ist offen.", "en": "The door is open.", "deSay": [["Die", "dee"], ["Tür", "tewr"], ["ist", "ist"], ["offen", "OF-fen"]], "level": "A1"},
-    {"word": "das Fenster", "english": "window", "pos": "noun", "say": "dahs FEN-ster", "visual": "🪟", "de": "Das Fenster ist zu.", "en": "The window is closed.", "deSay": [["Das", "dahs"], ["Fenster", "FEN-ster"], ["ist", "ist"], ["zu", "tsoo"]], "level": "A1"},
-    {"word": "das Zimmer", "english": "room", "pos": "noun", "say": "dahs TSIM-mer", "visual": "🛏️", "de": "Mein Zimmer ist klein.", "en": "My room is small.", "deSay": [["Mein", "mine"], ["Zimmer", "TSIM-mer"], ["ist", "ist"], ["klein", "kline"]], "level": "A1"},
-    {"word": "schlafen", "english": "to sleep", "pos": "verb", "say": "SHLAH-fen", "visual": "💤", "de": "Ich schlafe gut.", "en": "I sleep well.", "deSay": [["Ich", "ikh"], ["schlafe", "SHLAH-fuh"], ["gut", "goot"]], "level": "A1"},
-    {"word": "aufstehen", "english": "to get up", "pos": "verb", "say": "OWF-shtay-en", "visual": "🌅", "de": "Ich stehe um sieben auf.", "en": "I get up at seven.", "deSay": [["Ich", "ikh"], ["stehe", "SHTAY-uh"], ["um", "oom"], ["sieben", "ZEE-ben"], ["auf", "owf"]], "level": "A1"},
-    {"word": "waschen", "english": "to wash", "pos": "verb", "say": "VAH-shen", "visual": "🧼", "de": "Ich wasche meine Hände.", "en": "I wash my hands.", "deSay": [["Ich", "ikh"], ["wasche", "VAH-shuh"], ["meine", "MINE-uh"], ["Hände", "HEN-duh"]], "level": "A1"},
-    {"word": "der Kopf", "english": "head", "pos": "noun", "say": "dehr kopf", "visual": "🧠", "de": "Mein Kopf tut weh.", "en": "My head hurts.", "deSay": [["Mein", "mine"], ["Kopf", "kopf"], ["tut", "toot"], ["weh", "vay"]], "level": "A1"},
-    {"word": "das Auge", "english": "eye", "pos": "noun", "say": "dahs OW-guh", "visual": "👁️", "de": "Sie hat blaue Augen.", "en": "She has blue eyes.", "deSay": [["Sie", "zee"], ["hat", "haht"], ["blaue", "BLOW-uh"], ["Augen", "OW-gen"]], "level": "A1"},
-    {"word": "das Ohr", "english": "ear", "pos": "noun", "say": "dahs ohr", "visual": "👂", "de": "Das Ohr tut weh.", "en": "The ear hurts.", "deSay": [["Das", "dahs"], ["Ohr", "ohr"], ["tut", "toot"], ["weh", "vay"]], "level": "A1"},
-    {"word": "die Nase", "english": "nose", "pos": "noun", "say": "dee NAH-zuh", "visual": "👃", "de": "Meine Nase ist klein.", "en": "My nose is small.", "deSay": [["Meine", "MINE-uh"], ["Nase", "NAH-zuh"], ["ist", "ist"], ["klein", "kline"]], "level": "A1"},
-    {"word": "der Mund", "english": "mouth", "pos": "noun", "say": "dehr moont", "visual": "👄", "de": "Öffne den Mund.", "en": "Open your mouth.", "deSay": [["Öffne", "URF-nuh"], ["den", "dane"], ["Mund", "moont"]], "level": "A1"},
-    {"word": "die Hand", "english": "hand", "pos": "noun", "say": "dee hahnt", "visual": "✋", "de": "Gib mir deine Hand.", "en": "Give me your hand.", "deSay": [["Gib", "gip"], ["mir", "meer"], ["deine", "DINE-uh"], ["Hand", "hahnt"]], "level": "A1"},
-    {"word": "der Fuß", "english": "foot", "pos": "noun", "say": "dehr fooss", "visual": "🦶", "de": "Mein Fuß ist kalt.", "en": "My foot is cold.", "deSay": [["Mein", "mine"], ["Fuß", "fooss"], ["ist", "ist"], ["kalt", "kahlt"]], "level": "A1"},
-    {"word": "das Herz", "english": "heart", "pos": "noun", "say": "dahs hairts", "visual": "❤️", "de": "Das Herz schlägt.", "en": "The heart beats.", "deSay": [["Das", "dahs"], ["Herz", "hairts"], ["schlägt", "shlaygt"]], "level": "A1"},
-    {"word": "krank", "english": "sick", "pos": "adj", "say": "krahnk", "visual": "🤒", "de": "Ich bin krank.", "en": "I am sick.", "deSay": [["Ich", "ikh"], ["bin", "bin"], ["krank", "krahnk"]], "level": "A1"},
-    {"word": "gesund", "english": "healthy", "pos": "adj", "say": "guh-ZOONT", "visual": "🍏", "de": "Er ist gesund.", "en": "He is healthy.", "deSay": [["Er", "ehr"], ["ist", "ist"], ["gesund", "guh-ZOONT"]], "level": "A1"},
-    {"word": "der Arzt", "english": "doctor", "pos": "noun", "say": "dehr artst", "visual": "👨‍⚕️", "de": "Der Arzt hilft.", "en": "The doctor helps.", "deSay": [["Der", "dehr"], ["Arzt", "artst"], ["hilft", "hilft"]], "level": "A1"},
-    {"word": "das Krankenhaus", "english": "hospital", "pos": "noun", "say": "dahs KRAHN-ken-howss", "visual": "🏥", "de": "Das Krankenhaus ist groß.", "en": "The hospital is big.", "deSay": [["Das", "dahs"], ["Krankenhaus", "KRAHN-ken-howss"], ["ist", "ist"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "das Geld", "english": "money", "pos": "noun", "say": "dahs gelt", "visual": "💶", "de": "Ich habe kein Geld.", "en": "I have no money.", "deSay": [["Ich", "ikh"], ["habe", "HAH-buh"], ["kein", "kine"], ["Geld", "gelt"]], "level": "A1"},
-    {"word": "kaufen", "english": "to buy", "pos": "verb", "say": "KOW-fen", "visual": "🛒", "de": "Ich kaufe Brot.", "en": "I am buying bread.", "deSay": [["Ich", "ikh"], ["kaufe", "KOW-fuh"], ["Brot", "broht"]], "level": "A1"},
-    {"word": "verkaufen", "english": "to sell", "pos": "verb", "say": "fehr-KOW-fen", "visual": "💰", "de": "Er verkauft sein Auto.", "en": "He is selling his car.", "deSay": [["Er", "ehr"], ["verkauft", "fehr-KOWFT"], ["sein", "zine"], ["Auto", "OW-toh"]], "level": "A1"},
-    {"word": "teuer", "english": "expensive", "pos": "adj", "say": "TOY-er", "visual": "💎", "de": "Das ist zu teuer.", "en": "That is too expensive.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["zu", "tsoo"], ["teuer", "TOY-er"]], "level": "A1"},
-    {"word": "billig", "english": "cheap", "pos": "adj", "say": "BIL-likh", "visual": "🏷️", "de": "Das ist sehr billig.", "en": "That is very cheap.", "deSay": [["Das", "dahs"], ["ist", "ist"], ["sehr", "zehr"], ["billig", "BIL-likh"]], "level": "A1"},
-    {"word": "der Supermarkt", "english": "supermarket", "pos": "noun", "say": "dehr ZOO-per-markt", "visual": "🛒", "de": "Ich gehe in den Supermarkt.", "en": "I am going to the supermarket.", "deSay": [["Ich", "ikh"], ["gehe", "GEH-uh"], ["in", "in"], ["den", "dane"], ["Supermarkt", "ZOO-per-markt"]], "level": "A1"},
-    {"word": "der Markt", "english": "market", "pos": "noun", "say": "dehr markt", "visual": "🏪", "de": "Der Markt ist am Samstag.", "en": "The market is on Saturday.", "deSay": [["Der", "dehr"], ["Markt", "markt"], ["ist", "ist"], ["am", "ahm"], ["Samstag", "ZAHMS-tahk"]], "level": "A1"},
-    {"word": "das Obst", "english": "fruit", "pos": "noun", "say": "dahs ohpst", "visual": "🍎", "de": "Ich esse viel Obst.", "en": "I eat a lot of fruit.", "deSay": [["Ich", "ikh"], ["esse", "ES-suh"], ["viel", "feel"], ["Obst", "ohpst"]], "level": "A1"},
-    {"word": "das Gemüse", "english": "vegetables", "pos": "noun", "say": "dahs guh-MEW-zuh", "visual": "🥦", "de": "Gemüse ist gesund.", "en": "Vegetables are healthy.", "deSay": [["Gemüse", "guh-MEW-zuh"], ["ist", "ist"], ["gesund", "guh-ZOONT"]], "level": "A1"},
-    {"word": "der Käse", "english": "cheese", "pos": "noun", "say": "dehr KAY-zuh", "visual": "🧀", "de": "Der Käse ist lecker.", "en": "The cheese is delicious.", "deSay": [["Der", "dehr"], ["Käse", "KAY-zuh"], ["ist", "ist"], ["lecker", "LEK-ker"]], "level": "A1"},
-    {"word": "die Milch", "english": "milk", "pos": "noun", "say": "dee milkh", "visual": "🥛", "de": "Ich trinke Milch.", "en": "I drink milk.", "deSay": [["Ich", "ikh"], ["trinke", "TRIN-kuh"], ["Milch", "milkh"]], "level": "A1"},
-    {"word": "das Ei", "english": "egg", "pos": "noun", "say": "dahs eye", "visual": "🥚", "de": "Ich esse ein Ei.", "en": "I am eating an egg.", "deSay": [["Ich", "ikh"], ["esse", "ES-suh"], ["ein", "ine"], ["Ei", "eye"]], "level": "A1"},
-    {"word": "das Fleisch", "english": "meat", "pos": "noun", "say": "dahs flysh", "visual": "🥩", "de": "Er isst kein Fleisch.", "en": "He does not eat meat.", "deSay": [["Er", "ehr"], ["isst", "ist"], ["kein", "kine"], ["Fleisch", "flysh"]], "level": "A1"},
-    {"word": "der Kuchen", "english": "cake", "pos": "noun", "say": "dehr KOO-khen", "visual": "🍰", "de": "Der Kuchen ist süß.", "en": "The cake is sweet.", "deSay": [["Der", "dehr"], ["Kuchen", "KOO-khen"], ["ist", "ist"], ["süß", "zews"]], "level": "A1"},
-    {"word": "der Zucker", "english": "sugar", "pos": "noun", "say": "dehr TSOO-ker", "visual": "🍬", "de": "Ich brauche Zucker.", "en": "I need sugar.", "deSay": [["Ich", "ikh"], ["brauche", "BROW-khuh"], ["Zucker", "TSOO-ker"]], "level": "A1"},
-    {"word": "das Salz", "english": "salt", "pos": "noun", "say": "dahs zahltz", "visual": "🧂", "de": "Gib mir das Salz.", "en": "Give me the salt.", "deSay": [["Gib", "gip"], ["mir", "meer"], ["das", "dahs"], ["Salz", "zahltz"]], "level": "A1"},
-    {"word": "der Kaffee", "english": "coffee", "pos": "noun", "say": "dehr kah-FAY", "visual": "☕", "de": "Ich trinke Kaffee.", "en": "I drink coffee.", "deSay": [["Ich", "ikh"], ["trinke", "TRIN-kuh"], ["Kaffee", "kah-FAY"]], "level": "A1"},
-    {"word": "der Tee", "english": "tea", "pos": "noun", "say": "dehr tay", "visual": "🍵", "de": "Möchtest du Tee?", "en": "Would you like tea?", "deSay": [["Möchtest", "MURKH-test"], ["du", "doo"], ["Tee", "tay"]], "level": "A1"},
-    {"word": "das Wetter", "english": "weather", "pos": "noun", "say": "dahs VET-ter", "visual": "🌤️", "de": "Das Wetter ist schön.", "en": "The weather is nice.", "deSay": [["Das", "dahs"], ["Wetter", "VET-ter"], ["ist", "ist"], ["schön", "shurn"]], "level": "A1"},
-    {"word": "regnen", "english": "to rain", "pos": "verb", "say": "RAYG-nen", "visual": "🌧️", "de": "Es regnet heute.", "en": "It is raining today.", "deSay": [["Es", "es"], ["regnet", "RAYG-net"], ["heute", "HOY-tuh"]], "level": "A1"}
-  ];
-
-  var batch3 = [
-    {"word": "schneien", "english": "to snow", "pos": "verb", "say": "SHNY-en", "visual": "🌨️", "de": "Es schneit im Winter.", "en": "It snows in winter.", "deSay": [["Es", "es"], ["schneit", "shnite"], ["im", "im"], ["Winter", "VIN-ter"]], "level": "A1"},
-    {"word": "die Wolke", "english": "cloud", "pos": "noun", "say": "dee VOL-kuh", "visual": "☁️", "de": "Die Wolke ist grau.", "en": "The cloud is grey.", "deSay": [["Die", "dee"], ["Wolke", "VOL-kuh"], ["ist", "ist"], ["grau", "grow"]], "level": "A1"},
-    {"word": "warm", "english": "warm", "pos": "adj", "say": "vahrm", "visual": "🌡️", "de": "Es ist warm heute.", "en": "It is warm today.", "deSay": [["Es", "es"], ["ist", "ist"], ["warm", "vahrm"], ["heute", "HOY-tuh"]], "level": "A1"},
-    {"word": "kalt", "english": "cold", "pos": "adj", "say": "kahlt", "visual": "❄️", "de": "Der Winter ist kalt.", "en": "The winter is cold.", "deSay": [["Der", "dehr"], ["Winter", "VIN-ter"], ["ist", "ist"], ["kalt", "kahlt"]], "level": "A1"},
-    {"word": "heiß", "english": "hot", "pos": "adj", "say": "hice", "visual": "🔥", "de": "Der Kaffee ist heiß.", "en": "The coffee is hot.", "deSay": [["Der", "dehr"], ["Kaffee", "kah-FAY"], ["ist", "ist"], ["heiß", "hice"]], "level": "A1"},
-    {"word": "der Sommer", "english": "summer", "pos": "noun", "say": "dehr ZOM-mer", "visual": "🏖️", "de": "Der Sommer ist schön.", "en": "The summer is beautiful.", "deSay": [["Der", "dehr"], ["Sommer", "ZOM-mer"], ["ist", "ist"], ["schön", "shurn"]], "level": "A1"},
-    {"word": "der Winter", "english": "winter", "pos": "noun", "say": "dehr VIN-ter", "visual": "⛄", "de": "Der Winter ist kalt.", "en": "The winter is cold.", "deSay": [["Der", "dehr"], ["Winter", "VIN-ter"], ["ist", "ist"], ["kalt", "kahlt"]], "level": "A1"},
-    {"word": "der Frühling", "english": "spring", "pos": "noun", "say": "dehr FREW-ling", "visual": "🌸", "de": "Der Frühling ist da.", "en": "Spring is here.", "deSay": [["Der", "dehr"], ["Frühling", "FREW-ling"], ["ist", "ist"], ["da", "dah"]], "level": "A1"},
-    {"word": "der Herbst", "english": "autumn", "pos": "noun", "say": "dehr hairpst", "visual": "🍂", "de": "Der Herbst ist bunt.", "en": "Autumn is colorful.", "deSay": [["Der", "dehr"], ["Herbst", "hairpst"], ["ist", "ist"], ["bunt", "boont"]], "level": "A1"},
-    {"word": "der Freund", "english": "friend", "pos": "noun", "say": "dehr froynt", "visual": "🧑‍🤝‍🧑", "de": "Er ist mein Freund.", "en": "He is my friend.", "deSay": [["Er", "ehr"], ["ist", "ist"], ["mein", "mine"], ["Freund", "froynt"]], "level": "A1"},
-    {"word": "die Freundin", "english": "friend (female)", "pos": "noun", "say": "dee FROYN-din", "visual": "👭", "de": "Sie ist meine Freundin.", "en": "She is my friend.", "deSay": [["Sie", "zee"], ["ist", "ist"], ["meine", "MINE-uh"], ["Freundin", "FROYN-din"]], "level": "A1"},
-    {"word": "der Bruder", "english": "brother", "pos": "noun", "say": "dehr BROO-der", "visual": "👦", "de": "Mein Bruder ist klein.", "en": "My brother is small.", "deSay": [["Mein", "mine"], ["Bruder", "BROO-der"], ["ist", "ist"], ["klein", "kline"]], "level": "A1"},
-    {"word": "die Schwester", "english": "sister", "pos": "noun", "say": "dee SHVES-ter", "visual": "👧", "de": "Meine Schwester ist groß.", "en": "My sister is tall.", "deSay": [["Meine", "MINE-uh"], ["Schwester", "SHVES-ter"], ["ist", "ist"], ["groß", "grohss"]], "level": "A1"},
-    {"word": "die Eltern", "english": "parents", "pos": "noun", "say": "dee EL-tern", "visual": "👨‍👩‍👧", "de": "Meine Eltern sind hier.", "en": "My parents are here.", "deSay": [["Meine", "MINE-uh"], ["Eltern", "EL-tern"], ["sind", "zint"], ["hier", "heer"]], "level": "A1"},
-    {"word": "der Sohn", "english": "son", "pos": "noun", "say": "dehr zohn", "visual": "👦", "de": "Ihr Sohn ist nett.", "en": "Her son is nice.", "deSay": [["Ihr", "eer"], ["Sohn", "zohn"], ["ist", "ist"], ["nett", "net"]], "level": "A1"},
-    {"word": "die Tochter", "english": "daughter", "pos": "noun", "say": "dee TOKH-ter", "visual": "👧", "de": "Seine Tochter spielt.", "en": "His daughter is playing.", "deSay": [["Seine", "ZINE-uh"], ["Tochter", "TOKH-ter"], ["spielt", "shpeelt"]], "level": "A1"},
-    {"word": "das Alter", "english": "age", "pos": "noun", "say": "dahs AL-ter", "visual": "🎂", "de": "Das Alter ist egal.", "en": "Age does not matter.", "deSay": [["Das", "dahs"], ["Alter", "AL-ter"], ["ist", "ist"], ["egal", "ay-GAHL"]], "level": "A1"},
-    {"word": "alt", "english": "old", "pos": "adj", "say": "ahlt", "visual": "👴", "de": "Das Haus ist alt.", "en": "The house is old.", "deSay": [["Das", "dahs"], ["Haus", "howss"], ["ist", "ist"], ["alt", "ahlt"]], "level": "A1"},
-    {"word": "jung", "english": "young", "pos": "adj", "say": "yoong", "visual": "🧒", "de": "Der Hund ist jung.", "en": "The dog is young.", "deSay": [["Der", "dehr"], ["Hund", "hunt"], ["ist", "ist"], ["jung", "yoong"]], "level": "A1"},
-    {"word": "dick", "english": "fat; thick", "pos": "adj", "say": "dik", "visual": "🐷", "de": "Das Buch ist dick.", "en": "The book is thick.", "deSay": [["Das", "dahs"], ["Buch", "BOOKH"], ["ist", "ist"], ["dick", "dik"]], "level": "A1"},
-    {"word": "dünn", "english": "thin", "pos": "adj", "say": "dewn", "visual": "📏", "de": "Die Wand ist dünn.", "en": "The wall is thin.", "deSay": [["Die", "dee"], ["Wand", "vahnt"], ["ist", "ist"], ["dünn", "dewn"]], "level": "A1"},
-    {"word": "schnell", "english": "fast", "pos": "adj", "say": "shnel", "visual": "⚡", "de": "Das Auto ist schnell.", "en": "The car is fast.", "deSay": [["Das", "dahs"], ["Auto", "OW-toh"], ["ist", "ist"], ["schnell", "shnel"]], "level": "A1"},
-    {"word": "langsam", "english": "slow", "pos": "adj", "say": "LAHNG-zahm", "visual": "🐢", "de": "Der Zug ist langsam.", "en": "The train is slow.", "deSay": [["Der", "dehr"], ["Zug", "tsook"], ["ist", "ist"], ["langsam", "LAHNG-zahm"]], "level": "A1"},
-    {"word": "stark", "english": "strong", "pos": "adj", "say": "shtark", "visual": "💪", "de": "Er ist sehr stark.", "en": "He is very strong.", "deSay": [["Er", "ehr"], ["ist", "ist"], ["sehr", "zehr"], ["stark", "shtark"]], "level": "A1"},
-    {"word": "schwach", "english": "weak", "pos": "adj", "say": "shvahkh", "visual": "🥀", "de": "Ich bin schwach.", "en": "I am weak.", "deSay": [["Ich", "ikh"], ["bin", "bin"], ["schwach", "shvahkh"]], "level": "A1"},
-    {"word": "laut", "english": "loud", "pos": "adj", "say": "lowt", "visual": "🔊", "de": "Die Musik ist laut.", "en": "The music is loud.", "deSay": [["Die", "dee"], ["Musik", "moo-ZEEK"], ["ist", "ist"], ["laut", "lowt"]], "level": "A1"},
-    {"word": "leise", "english": "quiet", "pos": "adj", "say": "LYE-zuh", "visual": "🤫", "de": "Sei bitte leise.", "en": "Please be quiet.", "deSay": [["Sei", "zeye"], ["bitte", "BIT-tuh"], ["leise", "LYE-zuh"]], "level": "A1"},
-    {"word": "hell", "english": "bright", "pos": "adj", "say": "hel", "visual": "💡", "de": "Das Licht ist hell.", "en": "The light is bright.", "deSay": [["Das", "dahs"], ["Licht", "likht"], ["ist", "ist"], ["hell", "hel"]], "level": "A1"},
-    {"word": "dunkel", "english": "dark", "pos": "adj", "say": "DOON-kel", "visual": "🌑", "de": "Die Nacht ist dunkel.", "en": "The night is dark.", "deSay": [["Die", "dee"], ["Nacht", "nahkht"], ["ist", "ist"], ["dunkel", "DOON-kel"]], "level": "A1"},
-    {"word": "öffnen", "english": "to open", "pos": "verb", "say": "URF-nen", "visual": "🔓", "de": "Öffne die Tür.", "en": "Open the door.", "deSay": [["Öffne", "URF-nuh"], ["die", "dee"], ["Tür", "tewr"]], "level": "A1"},
-    {"word": "schließen", "english": "to close", "pos": "verb", "say": "SHLEE-sen", "visual": "🔒", "de": "Schließe das Fenster.", "en": "Close the window.", "deSay": [["Schließe", "SHLEE-suh"], ["das", "dahs"], ["Fenster", "FEN-ster"]], "level": "A1"},
-    {"word": "beginnen", "english": "to begin", "pos": "verb", "say": "buh-GIN-nen", "visual": "🏁", "de": "Der Film beginnt gleich.", "en": "The movie begins soon.", "deSay": [["Der", "dehr"], ["Film", "film"], ["beginnt", "buh-GINT"], ["gleich", "glikhe"]], "level": "A1"},
-    {"word": "enden", "english": "to end", "pos": "verb", "say": "EN-den", "visual": "🛑", "de": "Der Tag endet.", "en": "The day ends.", "deSay": [["Der", "dehr"], ["Tag", "tahk"], ["endet", "EN-det"]], "level": "A1"},
-    {"word": "fragen", "english": "to ask", "pos": "verb", "say": "FRAH-gen", "visual": "❓", "de": "Ich möchte etwas fragen.", "en": "I would like to ask something.", "deSay": [["Ich", "ikh"], ["möchte", "MURKH-tuh"], ["etwas", "ET-vahs"], ["fragen", "FRAH-gen"]], "level": "A1"},
-    {"word": "antworten", "english": "to answer", "pos": "verb", "say": "AHNT-vor-ten", "visual": "💬", "de": "Bitte antworte mir.", "en": "Please answer me.", "deSay": [["Bitte", "BIT-tuh"], ["antworte", "AHNT-vor-tuh"], ["mir", "meer"]], "level": "A1"},
-    {"word": "verstehen", "english": "to understand", "pos": "verb", "say": "fehr-SHTEH-en", "visual": "🧠", "de": "Ich verstehe dich.", "en": "I understand you.", "deSay": [["Ich", "ikh"], ["verstehe", "fehr-SHTEH-uh"], ["dich", "dikh"]], "level": "A1"},
-    {"word": "denken", "english": "to think", "pos": "verb", "say": "DEN-ken", "visual": "🤔", "de": "Ich denke oft an dich.", "en": "I often think of you.", "deSay": [["Ich", "ikh"], ["denke", "DEN-kuh"], ["oft", "oft"], ["an", "ahn"], ["dich", "dikh"]], "level": "A1"},
-    {"word": "glauben", "english": "to believe", "pos": "verb", "say": "GLOW-ben", "visual": "🙏", "de": "Ich glaube dir.", "en": "I believe you.", "deSay": [["Ich", "ikh"], ["glaube", "GLOW-buh"], ["dir", "deer"]], "level": "A1"},
-    {"word": "hoffen", "english": "to hope", "pos": "verb", "say": "HOF-fen", "visual": "🌟", "de": "Ich hoffe, du kommst.", "en": "I hope you come.", "deSay": [["Ich", "ikh"], ["hoffe", "HOF-fuh"], ["du", "doo"], ["kommst", "komst"]], "level": "A1"},
-    {"word": "lieben", "english": "to love", "pos": "verb", "say": "LEE-ben", "visual": "❤️", "de": "Ich liebe dich.", "en": "I love you.", "deSay": [["Ich", "ikh"], ["liebe", "LEE-buh"], ["dich", "dikh"]], "level": "A1"},
-    {"word": "hassen", "english": "to hate", "pos": "verb", "say": "HAH-sen", "visual": "💔", "de": "Er hasst Montage.", "en": "He hates Mondays.", "deSay": [["Er", "ehr"], ["hasst", "hahst"], ["Montage", "MOHN-tah-guh"]], "level": "A1"},
-    {"word": "lachen", "english": "to laugh", "pos": "verb", "say": "LAH-khen", "visual": "😄", "de": "Wir lachen viel.", "en": "We laugh a lot.", "deSay": [["Wir", "veer"], ["lachen", "LAH-khen"], ["viel", "feel"]], "level": "A1"},
-    {"word": "weinen", "english": "to cry", "pos": "verb", "say": "VYE-nen", "visual": "😭", "de": "Das Kind weint.", "en": "The child is crying.", "deSay": [["Das", "dahs"], ["Kind", "kint"], ["weint", "vynt"]], "level": "A1"},
-    {"word": "spielen", "english": "to play", "pos": "verb", "say": "SHPEE-len", "visual": "⚽", "de": "Die Kinder spielen.", "en": "The children are playing.", "deSay": [["Die", "dee"], ["Kinder", "KIN-der"], ["spielen", "SHPEE-len"]], "level": "A1"},
-    {"word": "singen", "english": "to sing", "pos": "verb", "say": "ZING-en", "visual": "🎤", "de": "Sie singt ein Lied.", "en": "She is singing a song.", "deSay": [["Sie", "zee"], ["singt", "zingt"], ["ein", "ine"], ["Lied", "leet"]], "level": "A1"},
-    {"word": "tanzen", "english": "to dance", "pos": "verb", "say": "TAHN-tsen", "visual": "💃", "de": "Wir tanzen zusammen.", "en": "We are dancing together.", "deSay": [["Wir", "veer"], ["tanzen", "TAHN-tsen"], ["zusammen", "tsoo-ZAH-men"]], "level": "A1"},
-    {"word": "lesen", "english": "to read", "pos": "verb", "say": "LAY-zen", "visual": "📖", "de": "Ich lese ein Buch.", "en": "I am reading a book.", "deSay": [["Ich", "ikh"], ["lese", "LAY-zuh"], ["ein", "ine"], ["Buch", "BOOKH"]], "level": "A1"},
-    {"word": "schreiben", "english": "to write", "pos": "verb", "say": "SHRY-ben", "visual": "✍️", "de": "Er schreibt einen Brief.", "en": "He is writing a letter.", "deSay": [["Er", "ehr"], ["schreibt", "shript"], ["einen", "EYE-nen"], ["Brief", "breef"]], "level": "A1"}
-  ];
-
-  /* ----------------------------------------------------------------
-   * State & Batch Loading Mechanism
-   * ---------------------------------------------------------------- */
-  var allBatches = [batch1, batch2, batch3];
-  var currentBatchIndex = 0;
-  
   var STORAGE_KEY = 'deutsch2500learned';
   var STORAGE_KEY_QUIZ = 'deutsch2500quiz';
   var STORAGE_KEY_WRITE = 'deutsch2500write';
   var STORAGE_KEY_GRAMMAR = 'deutsch2500grammar';
-  
-  var words = allBatches[0].slice();
-  var filtered = words.slice();
+  var STORAGE_KEY_WORDS = 'deutsch2500words_v1';
+
+  var words = [];
+  var filtered = [];
   var index = 0;
   var learned = loadLearned();
   var passedQuiz = loadSet(STORAGE_KEY_QUIZ);
@@ -493,9 +353,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       var raw = window.localStorage.getItem(STORAGE_KEY);
       var arr = raw ? JSON.parse(raw) : [];
       return new Set(Array.isArray(arr) ? arr : []);
-    } catch (e) {
-      return new Set();
-    }
+    } catch (e) { return new Set(); }
   }
 
   function loadSet(key) {
@@ -503,18 +361,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       var raw = window.localStorage.getItem(key);
       var arr = raw ? JSON.parse(raw) : [];
       return new Set(Array.isArray(arr) ? arr : []);
-    } catch (e) {
-      return new Set();
-    }
+    } catch (e) { return new Set(); }
   }
 
   function loadGrammarCache() {
     try {
       var raw = window.localStorage.getItem(STORAGE_KEY_GRAMMAR);
       return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
+    } catch (e) { return {}; }
   }
 
   function saveGrammarCache() {
@@ -524,51 +378,123 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   function saveSet(key, set) {
-    try {
-      window.localStorage.setItem(key, JSON.stringify(Array.from(set)));
-    } catch (e) { /* ignore */ }
+    try { window.localStorage.setItem(key, JSON.stringify(Array.from(set))); } catch (e) {}
   }
 
   function saveLearned() {
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(learned))); } catch (e) {}
+  }
+
+  /* ----------------------------------------------------------------
+   * REMOTE DATA LOADING & TRANSFORMATION
+   * ---------------------------------------------------------------- */
+  function transformRemoteWord(item) {
+    if (!item) return null;
+    var word = item.word || item.german || item.term || item.front || '';
+    if (!word) return null;
+    word = String(word).trim();
+    if (!word) return null;
+
+    var english = item.translation || item.english || item.meaning || item.back || '';
+    if (Array.isArray(english)) english = english[0];
+    english = english ? String(english).trim() : '';
+
+    var de = item.example || item.sentence || item.german_sentence || item.example_de || '';
+    if (Array.isArray(de)) de = de[0];
+    de = de ? String(de).trim() : '';
+
+    var en = item.example_translation || item.english_sentence || item.example_en || '';
+    if (Array.isArray(en)) en = en[0];
+    en = en ? String(en).trim() : '';
+
+    var pos = item.partOfSpeech || item.pos || item.type || 'word';
+    var level = item.level || 'A1';
+    var say = item.pronunciation || item.say || word;
+    var visual = item.visual || item.emoji || '📖';
+
+    return {
+      word: word,
+      english: english,
+      pos: pos,
+      say: say,
+      visual: visual,
+      de: de || ('Beispiel: ' + word),
+      en: en || (english || ''),
+      deSay: null,
+      level: level
+    };
+  }
+
+  function loadCachedWords() {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(learned)));
-    } catch (e) { /* storage may be unavailable */ }
-  }
-
-  function loadNextBatch() {
-    while (currentBatchIndex + 1 < allBatches.length) {
-      currentBatchIndex++;
-      var newBatch = allBatches[currentBatchIndex];
-      words = words.concat(newBatch);
-      
-      var q = $('search').value.trim().toLowerCase();
-      var lev = $('level').value;
-      var kind = $('kind').value;
-      
-      var oldFilteredLength = filtered.length;
-      
-      filtered = words.filter(function (w) {
-        if (lev !== 'all' && w.level !== lev) return false;
-        if (kind !== 'all' && w.pos !== kind) return false;
-        if (!q) return true;
-        return (w.word || '').toLowerCase().indexOf(q) !== -1 ||
-               (w.english || '').toLowerCase().indexOf(q) !== -1;
-      });
-      
-      if (filtered.length > oldFilteredLength) {
-        var newWordsSet = new Set(newBatch.map(function(b) { return b.word; }));
-        for (var i = 0; i < filtered.length; i++) {
-          if (newWordsSet.has(filtered[i].word)) {
-            index = i;
-            return true;
-          }
-        }
-        return true;
-      }
+      var raw = window.localStorage.getItem(STORAGE_KEY_WORDS);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) return null;
+      return parsed;
+    } catch (e) {
+      return null;
     }
-    return false;
   }
 
+  function saveCachedWords(list) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY_WORDS, JSON.stringify(list));
+    } catch (e) {
+      console.warn('Could not cache words (storage full or unavailable):', e);
+    }
+  }
+
+  function fetchWords() {
+    // 1. Use phone-cached copy if it exists — no network, no duplicate loading.
+    var cached = loadCachedWords();
+    if (cached) {
+      words = cached;
+      filtered = words.slice();
+      index = 0;
+      initAfterLoad();
+      return;
+    }
+
+    // 2. First run on this device — download once, then cache forever.
+    var rankEl = $('rank');
+    if (rankEl) rankEl.textContent = 'LOADING WORDS…';
+
+    fetch(DATA_URL)
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (!Array.isArray(data)) throw new Error('Remote data is not an array');
+        var transformed = data.map(transformRemoteWord).filter(Boolean);
+        if (transformed.length === 0) throw new Error('No valid words in remote data');
+        words = transformed;
+        saveCachedWords(words);
+        filtered = words.slice();
+        index = 0;
+        initAfterLoad();
+      })
+      .catch(function (err) {
+        console.warn('Remote fetch failed, using fallback:', err);
+        words = FALLBACK_WORDS.slice();
+        filtered = words.slice();
+        index = 0;
+        initAfterLoad();
+      });
+  }
+
+  function initAfterLoad() {
+    var rankEl = $('rank');
+    if (rankEl) rankEl.textContent = 'WORD 1';
+    render();
+    renderRows();
+    progress();
+  }
+
+  /* ----------------------------------------------------------------
+   * SPEECH / AUDIO
+   * ---------------------------------------------------------------- */
   var speechSupported = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
   var germanVoice = null;
   var voicesReady = false;
@@ -587,9 +513,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       }
       germanVoice = null;
       return null;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
   function updateAudioStatus() {
@@ -681,19 +605,15 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       u.rate = typeof rate === 'number' ? rate : 0.83;
       if (voice) u.voice = voice;
       window.speechSynthesis.speak(u);
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
   }
 
   window.speakTextGlobal = speakText;
 
   function speakHeadword(w) {
     if (!w) return;
-    if (!speechSupported) {
-      window.alert('Speech audio is not supported in this browser.');
-      return;
-    }
+    if (!speechSupported) { window.alert('Speech audio is not supported in this browser.'); return; }
     if (!germanVoice) pickGermanVoice();
-
     if (germanVoice) {
       speakText(w.word, 'de-DE', germanVoice, 0.83);
     } else {
@@ -703,81 +623,54 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
   function speakSentence(w) {
     if (!w) return;
-    if (!speechSupported) {
-      window.alert('Speech audio is not supported in this browser.');
-      return;
-    }
+    if (!speechSupported) { window.alert('Speech audio is not supported in this browser.'); return; }
     if (!germanVoice) pickGermanVoice();
-
     if (germanVoice) {
       speakText(w.de || w.word, 'de-DE', germanVoice, 0.83);
     } else {
-      var pairs = (Array.isArray(w.deSay) && w.deSay.length) ? w.deSay : [[w.word, w.say || w.word]];
-      var parts = [];
-      for (var i = 0; i < pairs.length; i++) {
-        var p = pairs[i];
-        if (Array.isArray(p) && p.length >= 2) parts.push(ttsFallback(p[1]));
-      }
-      speakText(parts.join(' '), 'en-US', null, 0.9);
+      speakText(ttsFallback(w.de || w.word), 'en-US', null, 0.9);
     }
   }
 
   /* ----------------------------------------------------------------
-   * Auto Play Logic
+   * AUTO PLAY
    * ---------------------------------------------------------------- */
   async function getGrammarExplanation(w) {
     if (!w) return "";
     if (grammarCache[w.word]) return grammarCache[w.word];
-    
     try {
       var prompt = `Explain in English why the word "${w.word}" is used in the German sentence "${w.de}" (meaning "${w.en}"). Focus on grammar, conjugation, case, or word order. Keep it under 30 words.`;
       var response = await puter.ai.chat(prompt, { model: 'openai/gpt-4o-mini' });
-      
       var text = '';
       if (typeof response === 'string') text = response;
       else if (response && response.message && response.message.content) {
-        if (Array.isArray(response.message.content)) {
-          text = response.message.content.map(part => part.text || '').join('');
-        } else {
-          text = response.message.content;
-        }
+        if (Array.isArray(response.message.content)) text = response.message.content.map(part => part.text || '').join('');
+        else text = response.message.content;
       } else if (response && response.text) text = response.text;
-      
       if (text) {
         text = text.replace(/[*#_`]/g, '').trim();
         grammarCache[w.word] = text;
         saveGrammarCache();
         return text;
       }
-    } catch (e) {
-      console.error("Grammar generation failed:", e);
-    }
-    
+    } catch (e) { console.error("Grammar generation failed:", e); }
     return "This word is a " + (w.pos || "word") + " in the sentence.";
   }
 
   function stopAutoPlay() {
     isAutoPlaying = false;
     var btn = $('autoPlay');
-    if (btn) {
-      btn.textContent = '▶ Auto Play';
-      btn.classList.remove('active');
-    }
+    if (btn) { btn.textContent = '▶ Auto Play'; btn.classList.remove('active'); }
     var statusEl = $('autoPlayStatus');
     if (statusEl) statusEl.style.display = 'none';
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
   }
 
   function startAutoPlay() {
     if (isAutoPlaying) return;
     isAutoPlaying = true;
     var btn = $('autoPlay');
-    if (btn) {
-      btn.textContent = '⏸ Stop Auto Play';
-      btn.classList.add('active');
-    }
+    if (btn) { btn.textContent = '⏸ Stop Auto Play'; btn.classList.add('active'); }
     var statusEl = $('autoPlayStatus');
     if (statusEl) statusEl.style.display = 'block';
     playCurrentWordAndSentence();
@@ -787,63 +680,52 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (!isAutoPlaying) return;
     var w = current();
     if (!w) { stopAutoPlay(); return; }
-    
     var statusEl = $('autoPlayStatus');
 
-    // 1. Speak German Word
+    // 1. German word
     if (statusEl) statusEl.textContent = "🔊 Narrating word: " + w.word;
     var wordText = w.word;
     var wordLang = 'de-DE';
     var wordVoice = germanVoice;
-    if (!germanVoice) {
-      wordText = ttsFallback(w.say || w.word);
-      wordLang = 'en-US';
-      wordVoice = null;
-    }
+    if (!germanVoice) { wordText = ttsFallback(w.say || w.word); wordLang = 'en-US'; wordVoice = null; }
     await speakAsync(wordText, wordLang, wordVoice);
     if (!isAutoPlaying) return;
 
-    // 2. Speak English Meaning of the Word
+    // 2. English meaning
     if (w.english) {
       if (statusEl) statusEl.textContent = "🔊 Narrating meaning: " + w.english;
       await speakAsync("Meaning: " + w.english, 'en-US');
       if (!isAutoPlaying) return;
     }
 
-    // 3. Speak English Pronunciation
+    // 3. English pronunciation
     if (w.say) {
       if (statusEl) statusEl.textContent = "🔊 Narrating pronunciation: " + w.say;
       await speakAsync("Pronounced as: " + w.say, 'en-US');
       if (!isAutoPlaying) return;
     }
 
-    // 4. Speak German Sentence
+    // 4. German sentence
     if (statusEl) statusEl.textContent = "🔊 Narrating sentence: " + w.de;
     var sentenceText = w.de || w.word;
     var sentenceLang = 'de-DE';
     var sentenceVoice = germanVoice;
     if (!germanVoice) {
-      var pairs = (Array.isArray(w.deSay) && w.deSay.length) ? w.deSay : [[w.word, w.say || w.word]];
-      var parts = [];
-      for (var i = 0; i < pairs.length; i++) {
-        var p = pairs[i];
-        if (Array.isArray(p) && p.length >= 2) parts.push(ttsFallback(p[1]));
-      }
-      sentenceText = parts.join(' ');
+      sentenceText = ttsFallback(w.de || w.word);
       sentenceLang = 'en-US';
       sentenceVoice = null;
     }
     await speakAsync(sentenceText, sentenceLang, sentenceVoice);
     if (!isAutoPlaying) return;
 
-    // 5. Speak English Translation of the Sentence
+    // 5. English translation
     if (w.en) {
       if (statusEl) statusEl.textContent = "🔊 Narrating translation: " + w.en;
       await speakAsync(w.en, 'en-US');
       if (!isAutoPlaying) return;
     }
 
-    // 6. Speak Grammar Explanation
+    // 6. Grammar explanation
     if (statusEl) statusEl.textContent = "🧠 Generating grammar explanation...";
     var grammar = await getGrammarExplanation(w);
     if (!isAutoPlaying) return;
@@ -857,13 +739,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     setTimeout(function() {
       if (!isAutoPlaying) return;
       if (!filtered.length) { stopAutoPlay(); return; }
-      if (index >= filtered.length - 1) {
-        if (loadNextBatch()) {
-          render();
-          playCurrentWordAndSentence();
-          return;
-        }
-      }
       index = (index + 1) % filtered.length;
       render();
       playCurrentWordAndSentence();
@@ -894,9 +769,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     var box = $('deSay');
     if (!box) return;
     var pairs = (w && Array.isArray(w.deSay)) ? w.deSay : null;
-    if (!pairs || !pairs.length) {
-      box.innerHTML = ''; box.hidden = true; return;
-    }
+    if (!pairs || !pairs.length) { box.innerHTML = ''; box.hidden = true; return; }
     var html = '<span class="say-label">Say it</span>';
     for (var i = 0; i < pairs.length; i++) {
       var pair = pairs[i];
@@ -949,7 +822,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
 
   function filter() {
     stopAutoPlay();
-    
     var q = $('search').value.trim().toLowerCase();
     var lev = $('level').value;
     var kind = $('kind').value;
@@ -989,18 +861,11 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       '</div>';
     }).join('');
 
-    if (currentBatchIndex < allBatches.length - 1) {
-      html += '<div style="grid-column:1/-1;text-align:center;margin-top:16px;">' +
-              '<button type="button" id="loadMoreBtn" class="audio" style="padding:12px 24px;">Load More Words</button>' +
-              '</div>';
-    }
-
     $('rows').innerHTML = html;
 
     Array.prototype.forEach.call($('rows').querySelectorAll('.row'), function (row) {
       row.onclick = function (e) {
-        if (e.target.closest('.reveal-btn') || e.target.closest('#loadMoreBtn')) return;
-
+        if (e.target.closest('.reveal-btn')) return;
         stopAutoPlay();
         var target = row.getAttribute('data-word');
         for (var i = 0; i < filtered.length; i++) {
@@ -1030,20 +895,12 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
         }
       };
     });
-
-    var loadMoreBtn = $('loadMoreBtn');
-    if (loadMoreBtn) {
-      loadMoreBtn.onclick = function() {
-        loadNextBatch();
-        renderRows();
-      };
-    }
   }
 
   function showView(view) {
     stopAutoPlay();
     window.AppContext.activeTab = view;
-    
+
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
       b.classList.toggle('active', b.getAttribute('data-view') === view);
     });
@@ -1108,7 +965,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     Array.prototype.forEach.call($('choices').querySelectorAll('button'), function (btn, i) {
       btn.onclick = function () {
         var correct = options[i] === answer;
-        
         window.AppContext.quiz.selected = options[i].english;
 
         if (correct) {
@@ -1122,7 +978,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
           $('feedback').style.color = '#b42318';
           $('retryQuiz').style.display = 'inline-block';
         }
-        
+
         Array.prototype.forEach.call($('choices').querySelectorAll('button'), function (b) {
           b.disabled = true;
         });
@@ -1133,32 +989,31 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   function newWritingPrompt() {
     var target = current();
     if (!target) return;
-    
     currentWriteWord = target;
-    
+
     window.AppContext.write = {
       prompt: currentWriteWord.en,
       userInput: '',
       feedback: '',
       isPassed: null
     };
-    
+
     $('writePrompt').textContent = currentWriteWord.en;
     $('writeInput').value = '';
     $('writeFeedback').textContent = '';
     $('writeFeedback').style.color = '';
     $('writeCorrect').style.display = 'none';
-    
+
     $('checkWrite').disabled = false;
     $('checkWrite').style.display = 'inline-block';
     $('nextWrite').style.display = 'none';
     $('retryWrite').style.display = 'none';
-    
+
     if (passedWrite.has(currentWriteWord.word)) {
       $('writeFeedback').textContent = '⭐ Previously passed!';
       $('writeFeedback').style.color = 'var(--green)';
     }
-    
+
     $('writeInput').focus();
   }
 
@@ -1168,7 +1023,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (!userInput) return;
 
     var correct = currentWriteWord.de;
-    
     var normUser = userInput.replace(/[.,!?;:]/g, '').trim().replace(/\s+/g, ' ');
     var normCorrect = correct.replace(/[.,!?;:]/g, '').trim().replace(/\s+/g, ' ');
 
@@ -1217,22 +1071,16 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     $('writeInput').blur();
   }
 
+  /* ----------------------------------------------------------------
+   * EVENT WIRING
+   * ---------------------------------------------------------------- */
   Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (btn) {
     btn.onclick = function () { showView(btn.getAttribute('data-view')); };
   });
 
-  $('sayWord').onclick = function () { 
-    stopAutoPlay();
-    speakHeadword(current()); 
-  };
-  $('sayExample').onclick = function () { 
-    stopAutoPlay();
-    speakSentence(current()); 
-  };
-  $('again').onclick = function () { 
-    stopAutoPlay();
-    speakHeadword(current()); 
-  };
+  $('sayWord').onclick = function () { stopAutoPlay(); speakHeadword(current()); };
+  $('sayExample').onclick = function () { stopAutoPlay(); speakSentence(current()); };
+  $('again').onclick = function () { stopAutoPlay(); speakHeadword(current()); };
 
   $('prev').onclick = function () {
     stopAutoPlay();
@@ -1244,22 +1092,13 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   $('next').onclick = function () {
     stopAutoPlay();
     if (!filtered.length) return;
-    if (index >= filtered.length - 1) {
-      if (loadNextBatch()) {
-        render();
-        return;
-      }
-    }
     index = (index + 1) % filtered.length;
     render();
   };
 
   $('autoPlay').onclick = function () {
-    if (isAutoPlaying) {
-      stopAutoPlay();
-    } else {
-      startAutoPlay();
-    }
+    if (isAutoPlaying) stopAutoPlay();
+    else startAutoPlay();
   };
 
   $('mark').onclick = function () {
@@ -1271,18 +1110,9 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     render();
   };
 
-  $('retryQuiz').onclick = function () {
-    newQuestion(); 
-  };
+  $('retryQuiz').onclick = function () { newQuestion(); };
   $('newQuiz').onclick = function () {
     if (!filtered.length) return;
-    if (index >= filtered.length - 1) {
-      if (loadNextBatch()) {
-        render();
-        newQuestion();
-        return;
-      }
-    }
     index = (index + 1) % filtered.length;
     render();
     newQuestion();
@@ -1302,36 +1132,31 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     window.AppContext.write.feedback = '';
     window.AppContext.write.isPassed = null;
   };
+
   $('nextWrite').onclick = function () {
     if (!filtered.length) return;
-    if (index >= filtered.length - 1) {
-      if (loadNextBatch()) {
-        render();
-        newWritingPrompt();
-        return;
-      }
-    }
     index = (index + 1) % filtered.length;
     render();
     newWritingPrompt();
   };
+
   $('checkWrite').onclick = checkWriting;
-  
+
   $('writeInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      checkWriting();
-    }
+    if (e.key === 'Enter') checkWriting();
   });
 
   $('search').addEventListener('input', filter);
   $('level').addEventListener('change', filter);
   $('kind').addEventListener('change', filter);
 
-  filter();
+  /* ----------------------------------------------------------------
+   * BOOT
+   * ---------------------------------------------------------------- */
+  fetchWords();
 })();
 </script>
 
-<!-- AI Tutor Logic -->
 <script>
 (function() {
   'use strict';
@@ -1366,13 +1191,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   window.speakAIResponse = function(btnElement) {
     const text = btnElement.getAttribute('data-text');
     if (!text) return;
-    
     const cleanText = text.replace(/[*#_`]/g, '');
-    
     if (window.speakTextGlobal) {
       let voices = window.speechSynthesis.getVoices();
       let germanVoice = voices.find(v => /^de([-_]|$)/i.test(v.lang));
-      
       window.speakTextGlobal(cleanText, germanVoice ? 'de-DE' : 'en-US', germanVoice, 0.9);
     } else {
       window.speechSynthesis.cancel();
@@ -1447,18 +1269,18 @@ Speak simply, use English to explain, and provide the German text in bold if nec
   function addMessage(text, type) {
     const div = document.createElement('div');
     div.className = `msg ${type}`;
-    
+
     if (type === 'ai' && !type.includes('loading')) {
       const textSpan = document.createElement('span');
       textSpan.className = 'msg-text';
       textSpan.textContent = text;
-      
+
       const audioBtn = document.createElement('button');
       audioBtn.className = 'msg-audio-btn';
       audioBtn.innerHTML = '🔊';
       audioBtn.setAttribute('data-text', text);
       audioBtn.onclick = function() { window.speakAIResponse(this); };
-      
+
       div.appendChild(textSpan);
       div.appendChild(audioBtn);
     } else {
@@ -1472,4 +1294,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-  </html>
+                                                                  </html>
