@@ -337,8 +337,9 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var STORAGE_KEY_QUIZ = 'deutsch2500quiz';
   var STORAGE_KEY_WRITE = 'deutsch2500write';
   var STORAGE_KEY_GRAMMAR = 'deutsch2500grammar';
-  var STORAGE_KEY_WORDS = 'deutsch2500words_v1';
+  var STORAGE_KEY_WORDS = 'deutsch2500words_v2';
   var STORAGE_KEY_MUSTKNOW = 'deutsch2500mustknow_v1';
+  var STORAGE_KEY_EXAMPLES = 'deutsch2500examples_v1';
 
   var words = [];
   var filtered = [];
@@ -348,6 +349,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var passedWrite = loadSet(STORAGE_KEY_WRITE);
   var grammarCache = loadGrammarCache();
   var mustKnowCache = loadMustKnowCache();
+  var examplesCache = loadExamplesCache();
+  var pendingExamples = {};
   var currentWriteWord = null;
   var isAutoPlaying = false;
 
@@ -397,6 +400,97 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     try { window.localStorage.setItem(STORAGE_KEY_MUSTKNOW, JSON.stringify(mustKnowCache)); } catch (e) {}
   }
 
+  function loadExamplesCache() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY_EXAMPLES);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+
+  function saveExamplesCache() {
+    try { window.localStorage.setItem(STORAGE_KEY_EXAMPLES, JSON.stringify(examplesCache)); } catch (e) {}
+  }
+
+  function hasRealExample(w) {
+    if (!w) return false;
+    var de = String(w.de || '').trim();
+    var en = String(w.en || '').trim();
+    if (!de || !en) return false;
+    if (de.indexOf('Beispiel:') === 0) return false;
+    return true;
+  }
+
+  async function getExample(w) {
+    if (!w) return { de: '', en: '' };
+    if (hasRealExample(w)) return { de: w.de, en: w.en };
+    if (examplesCache[w.word]) return examplesCache[w.word];
+    if (pendingExamples[w.word]) return pendingExamples[w.word];
+
+    var promise = (async function () {
+      try {
+        var prompt = 'Write ONE natural, simple German sentence (A1/A2 level, 4-8 words) using the word "' + w.word +
+          '" (English meaning: "' + (w.english || w.word) + '"). Then give its English translation.\n' +
+          'Respond ONLY with valid JSON in this exact format, nothing else: {"de":"German sentence here","en":"English translation here"}';
+        var response = await puter.ai.chat(prompt, { model: 'openai/gpt-4o-mini' });
+        var text = extractText(response);
+        if (text) {
+          var match = text.match(/\{[\s\S]*?\}/);
+          if (match) {
+            try {
+              var parsed = JSON.parse(match[0]);
+              if (parsed.de && parsed.en) {
+                var result = { de: String(parsed.de).trim(), en: String(parsed.en).trim() };
+                examplesCache[w.word] = result;
+                saveExamplesCache();
+                return result;
+              }
+            } catch (pe) { console.warn('Example JSON parse failed:', pe, text); }
+          }
+        }
+      } catch (e) {
+        console.error('Example generation failed:', e);
+      } finally {
+        delete pendingExamples[w.word];
+      }
+      return { de: '', en: '' };
+    })();
+    pendingExamples[w.word] = promise;
+    return promise;
+  }
+
+  function renderExample(w) {
+    var deEl = $('de');
+    var enEl = $('en');
+    if (!deEl || !enEl) return;
+
+    if (!w) {
+      deEl.textContent = '';
+      enEl.textContent = '';
+      return;
+    }
+
+    if (hasRealExample(w)) {
+      deEl.textContent = w.de;
+      enEl.textContent = w.en;
+      return;
+    }
+
+    if (examplesCache[w.word]) {
+      deEl.textContent = examplesCache[w.word].de;
+      enEl.textContent = examplesCache[w.word].en;
+      return;
+    }
+
+    deEl.textContent = 'Generating example sentence…';
+    enEl.textContent = '';
+
+    getExample(w).then(function (result) {
+      if (current() !== w) return;
+      deEl.textContent = result.de || '—';
+      enEl.textContent = result.en || '';
+    });
+  }
+
   function saveSet(key, set) {
     try { window.localStorage.setItem(key, JSON.stringify(Array.from(set))); } catch (e) {}
   }
@@ -438,8 +532,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       pos: pos,
       say: say,
       visual: visual,
-      de: de || ('Beispiel: ' + word),
-      en: en || (english || ''),
+      de: de ? String(de).trim() : '',
+      en: en ? String(en).trim() : '',
       deSay: null,
       level: level
     };
@@ -607,8 +701,9 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (!w) return;
     if (!speechSupported) { window.alert('Speech audio is not supported in this browser.'); return; }
     if (!germanVoice) pickGermanVoice();
-    if (germanVoice) speakText(w.de || w.word, 'de-DE', germanVoice, 0.83);
-    else speakText(ttsFallback(w.de || w.word), 'en-US', null, 0.9);
+    var de = (w.de && String(w.de).trim()) || (examplesCache[w.word] && examplesCache[w.word].de) || w.word;
+    if (germanVoice) speakText(de, 'de-DE', germanVoice, 0.83);
+    else speakText(ttsFallback(de), 'en-US', null, 0.9);
   }
 
   /* ----------------------------------------------------------------
@@ -624,11 +719,13 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     return '';
   }
 
-  async function getGrammarExplanation(w) {
+  async function getGrammarExplanation(w, sentence, sentenceEn) {
     if (!w) return "";
     if (grammarCache[w.word]) return grammarCache[w.word];
+    if (!sentence) return "";
+    if (!sentenceEn) sentenceEn = '';
     try {
-      var prompt = 'Explain in English why the word "' + w.word + '" is used in the German sentence "' + w.de + '" (meaning "' + w.en + '"). Focus on grammar, conjugation, case, or word order. Keep it under 30 words.';
+      var prompt = 'Explain in English why the word "' + w.word + '" is used in the German sentence "' + sentence + '" (meaning "' + sentenceEn + '"). Focus on grammar, conjugation, case, or word order. Keep it under 30 words.';
       var response = await puter.ai.chat(prompt, { model: 'openai/gpt-4o-mini' });
       var text = extractText(response);
       if (text) {
@@ -714,33 +811,40 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       if (!isAutoPlaying) return;
     }
 
-    // 4. German sentence
-    if (statusEl) statusEl.textContent = "🔊 Narrating sentence: " + w.de;
-    var sentenceText = w.de || w.word;
-    var sentenceLang = 'de-DE';
-    var sentenceVoice = germanVoice;
-    if (!germanVoice) { sentenceText = ttsFallback(w.de || w.word); sentenceLang = 'en-US'; sentenceVoice = null; }
-    await speakAsync(sentenceText, sentenceLang, sentenceVoice);
+    // 4. Get (or generate) the example sentence + translation
+    if (statusEl) statusEl.textContent = "🧠 Preparing example sentence…";
+    var example = await getExample(w);
     if (!isAutoPlaying) return;
 
-    // 5. English translation of the sentence
-    if (w.en) {
-      if (statusEl) statusEl.textContent = "🔊 Narrating translation: " + w.en;
-      await speakAsync(w.en, 'en-US');
+    // 5. German example sentence
+    if (example.de) {
+      if (statusEl) statusEl.textContent = "🔊 Narrating sentence: " + example.de;
+      var sentenceLang = germanVoice ? 'de-DE' : 'en-US';
+      var sentenceText = germanVoice ? example.de : ttsFallback(example.de);
+      await speakAsync(sentenceText, sentenceLang, germanVoice);
       if (!isAutoPlaying) return;
     }
 
-    // 6. Grammar explanation
-    if (statusEl) statusEl.textContent = "🧠 Generating grammar explanation...";
-    var grammar = await getGrammarExplanation(w);
-    if (!isAutoPlaying) return;
-    if (grammar) {
-      if (statusEl) statusEl.textContent = "🔊 Narrating explanation: " + grammar;
-      await speakAsync(grammar, 'en-US');
+    // 6. English translation of the sentence
+    if (example.en) {
+      if (statusEl) statusEl.textContent = "🔊 Narrating translation: " + example.en;
+      await speakAsync(example.en, 'en-US');
       if (!isAutoPlaying) return;
     }
 
-    // 7. Must know (usage & forms)
+    // 7. Grammar explanation (only if we have a real sentence)
+    if (example.de) {
+      if (statusEl) statusEl.textContent = "🧠 Generating grammar explanation...";
+      var grammar = await getGrammarExplanation(w, example.de, example.en);
+      if (!isAutoPlaying) return;
+      if (grammar) {
+        if (statusEl) statusEl.textContent = "🔊 Narrating explanation: " + grammar;
+        await speakAsync(grammar, 'en-US');
+        if (!isAutoPlaying) return;
+      }
+    }
+
+    // 8. Must know (usage & forms)
     if (statusEl) statusEl.textContent = "🧠 Generating usage guide...";
     var mustKnow = await getMustKnow(w);
     if (!isAutoPlaying) return;
@@ -822,8 +926,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       $('meaning').textContent = 'Try a different search or filter.';
       $('say').textContent = '';
       $('visual').textContent = '🔍';
-      $('de').textContent = '';
-      $('en').textContent = '';
+      renderExample(null);
       $('deSay').innerHTML = '';
       $('deSay').hidden = true;
       $('mustKnowContent').textContent = '';
@@ -841,9 +944,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     $('meaning').textContent = w.english || '';
     $('say').textContent = w.say ? 'say it: ' + w.say : '';
     $('visual').textContent = w.visual || '💡';
-    $('de').textContent = w.de || '';
-    $('en').textContent = w.en || '';
 
+    renderExample(w);
     renderSentenceSay(w);
     renderMustKnow(w);
 
@@ -1328,4 +1430,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-                              </html>
+          </html>
