@@ -93,6 +93,10 @@ main{max-width:1050px;margin:auto;padding:20px 16px 50px}
 .write-input:focus{border-color:var(--blue)}
 .write-feedback{margin-top:15px;font-weight:bold;font-size:15px}
 footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-height:1.6}
+.mustknow-card{background:#f8fbff;border:1px solid #dce8f5;border-radius:14px;padding:16px;margin-top:16px;transition:border-color .2s}
+.mustknow-card h4{margin:0 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);font-weight:750}
+.mustknow-card .mk-text{font-size:14px;line-height:1.65;color:var(--ink);white-space:pre-wrap}
+.mustknow-card .mk-status{font-size:11px;color:var(--muted);margin-top:6px}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls input{grid-column:1/-1}.rows{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:10px}.stat b{font-size:19px}}
 
 #aiTutorBtn {position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:var(--navy);color:white;border:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;z-index:1000;transition:transform 0.2s;}
@@ -178,6 +182,11 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
           <div class="de-say" id="deSay" aria-label="Pronunciation of each word in the sentence"></div>
           <div class="en" id="en"></div>
         </div>
+        <div class="mustknow-card" id="mustKnowSection">
+          <h4>Must know · usage &amp; forms</h4>
+          <div class="mk-text" id="mustKnowContent">Loading…</div>
+          <div class="mk-status" id="mustKnowStatus"></div>
+        </div>
         <div class="actions">
           <button type="button" class="unknown" id="again">↻ Practise again</button>
           <button type="button" class="known" id="mark">✓ I know this</button>
@@ -246,7 +255,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   </section>
 
   <footer>
-    2,500-word German frequency list · downloaded once on first use, then stored on your device.<br>
+    3,000 most frequent German words · downloaded once, cached on your device.<br>
     Pronunciation is English respelling for beginners. <b>kh</b> = soft ch, <b>KH</b> = throaty ch, <b>Ö/Ü</b> = rounded vowels (see key).
   </footer>
 </main>
@@ -289,8 +298,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
    * REMOTE DATA SOURCE
    * ---------------------------------------------------------------- */
   var DATA_URL = 'https://raw.githubusercontent.com/vbvss199/Language-Learning-decks/main/german/german.json';
+  var MAX_WORDS = 3000; // Load only the most frequent 3,000 words
 
-  /* Small fallback list in case the fetch fails on first run (30 words) */
   var FALLBACK_WORDS = [
     {word:'ich',english:'I',pos:'pron',say:'ikh',visual:'👤',de:'Ich lerne Deutsch.',en:'I am learning German.',deSay:[['Ich','ikh'],['lerne','LAIR-nuh'],['Deutsch','DOYTCH']],level:'A1'},
     {word:'du',english:'you (informal)',pos:'pron',say:'doo',visual:'🫵',de:'Wie heißt du?',en:'What is your name?',deSay:[['Wie','vee'],['heißt','HYST'],['du','doo']],level:'A1'},
@@ -329,6 +338,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var STORAGE_KEY_WRITE = 'deutsch2500write';
   var STORAGE_KEY_GRAMMAR = 'deutsch2500grammar';
   var STORAGE_KEY_WORDS = 'deutsch2500words_v1';
+  var STORAGE_KEY_MUSTKNOW = 'deutsch2500mustknow_v1';
 
   var words = [];
   var filtered = [];
@@ -337,6 +347,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   var passedQuiz = loadSet(STORAGE_KEY_QUIZ);
   var passedWrite = loadSet(STORAGE_KEY_WRITE);
   var grammarCache = loadGrammarCache();
+  var mustKnowCache = loadMustKnowCache();
   var currentWriteWord = null;
   var isAutoPlaying = false;
 
@@ -372,9 +383,18 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   }
 
   function saveGrammarCache() {
+    try { window.localStorage.setItem(STORAGE_KEY_GRAMMAR, JSON.stringify(grammarCache)); } catch (e) {}
+  }
+
+  function loadMustKnowCache() {
     try {
-      window.localStorage.setItem(STORAGE_KEY_GRAMMAR, JSON.stringify(grammarCache));
-    } catch (e) {}
+      var raw = window.localStorage.getItem(STORAGE_KEY_MUSTKNOW);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+
+  function saveMustKnowCache() {
+    try { window.localStorage.setItem(STORAGE_KEY_MUSTKNOW, JSON.stringify(mustKnowCache)); } catch (e) {}
   }
 
   function saveSet(key, set) {
@@ -432,21 +452,14 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       var parsed = JSON.parse(raw);
       if (!Array.isArray(parsed) || parsed.length === 0) return null;
       return parsed;
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
   function saveCachedWords(list) {
-    try {
-      window.localStorage.setItem(STORAGE_KEY_WORDS, JSON.stringify(list));
-    } catch (e) {
-      console.warn('Could not cache words (storage full or unavailable):', e);
-    }
+    try { window.localStorage.setItem(STORAGE_KEY_WORDS, JSON.stringify(list)); } catch (e) { console.warn('Could not cache words:', e); }
   }
 
   function fetchWords() {
-    // 1. Use phone-cached copy if it exists — no network, no duplicate loading.
     var cached = loadCachedWords();
     if (cached) {
       words = cached;
@@ -456,7 +469,6 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       return;
     }
 
-    // 2. First run on this device — download once, then cache forever.
     var rankEl = $('rank');
     if (rankEl) rankEl.textContent = 'LOADING WORDS…';
 
@@ -468,8 +480,9 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       .then(function (data) {
         if (!Array.isArray(data)) throw new Error('Remote data is not an array');
         var transformed = data.map(transformRemoteWord).filter(Boolean);
-        if (transformed.length === 0) throw new Error('No valid words in remote data');
-        words = transformed;
+        if (transformed.length === 0) throw new Error('No valid words');
+        // Load only the most frequent MAX_WORDS (3,000)
+        words = transformed.slice(0, MAX_WORDS);
         saveCachedWords(words);
         filtered = words.slice();
         index = 0;
@@ -506,10 +519,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       if (!voices || !voices.length) return null;
       voicesReady = true;
       for (var i = 0; i < voices.length; i++) {
-        if (/^de([-_]|$)/i.test(voices[i].lang)) {
-          germanVoice = voices[i];
-          return germanVoice;
-        }
+        if (/^de([-_]|$)/i.test(voices[i].lang)) { germanVoice = voices[i]; return germanVoice; }
       }
       germanVoice = null;
       return null;
@@ -519,21 +529,10 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
   function updateAudioStatus() {
     var el = $('audioStatus');
     if (!el) return;
-    if (!speechSupported) {
-      el.className = 'audio-status warn';
-      el.textContent = '⚠️ Speech synthesis is not supported in this browser.';
-      return;
-    }
-    if (germanVoice) {
-      el.className = 'audio-status ok';
-      el.textContent = '🔊 German voice ready (' + germanVoice.name + ') — accurate pronunciation.';
-    } else if (!voicesReady) {
-      el.className = 'audio-status checking';
-      el.textContent = 'Loading device voices…';
-    } else {
-      el.className = 'audio-status warn';
-      el.textContent = '⚠️ No German voice on this device. Using English approximation — install a German text-to-speech voice in your phone settings for accurate audio.';
-    }
+    if (!speechSupported) { el.className = 'audio-status warn'; el.textContent = '⚠️ Speech synthesis is not supported in this browser.'; return; }
+    if (germanVoice) { el.className = 'audio-status ok'; el.textContent = '🔊 German voice ready (' + germanVoice.name + ') — accurate pronunciation.'; }
+    else if (!voicesReady) { el.className = 'audio-status checking'; el.textContent = 'Loading device voices…'; }
+    else { el.className = 'audio-status warn'; el.textContent = '⚠️ No German voice. Using English approximation — install a German TTS voice for accuracy.'; }
   }
 
   function ensureVoices() {
@@ -544,27 +543,16 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     var attempts = 0;
     (function poll() {
       var voices = window.speechSynthesis.getVoices();
-      if (voices && voices.length > 0) {
-        pickGermanVoice();
-        updateAudioStatus();
-        return;
-      }
-      if (attempts++ < 40) {
-        setTimeout(poll, 250);
-      } else {
-        voicesReady = true;
-        updateAudioStatus();
-      }
+      if (voices && voices.length > 0) { pickGermanVoice(); updateAudioStatus(); return; }
+      if (attempts++ < 40) setTimeout(poll, 250);
+      else { voicesReady = true; updateAudioStatus(); }
     })();
   }
 
   if (speechSupported) {
     ensureVoices();
     if (typeof window.speechSynthesis.addEventListener === 'function') {
-      window.speechSynthesis.addEventListener('voiceschanged', function () {
-        pickGermanVoice();
-        updateAudioStatus();
-      });
+      window.speechSynthesis.addEventListener('voiceschanged', function () { pickGermanVoice(); updateAudioStatus(); });
     }
   }
 
@@ -587,11 +575,9 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       try {
         window.speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(text);
-        u.lang = lang;
-        u.rate = 0.83;
+        u.lang = lang; u.rate = 0.83;
         if (voice) u.voice = voice;
-        u.onend = resolve;
-        u.onerror = resolve;
+        u.onend = resolve; u.onerror = resolve;
         window.speechSynthesis.speak(u);
       } catch(e) { resolve(); }
     });
@@ -601,8 +587,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
-      u.lang = lang;
-      u.rate = typeof rate === 'number' ? rate : 0.83;
+      u.lang = lang; u.rate = typeof rate === 'number' ? rate : 0.83;
       if (voice) u.voice = voice;
       window.speechSynthesis.speak(u);
     } catch (e) {}
@@ -614,39 +599,38 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (!w) return;
     if (!speechSupported) { window.alert('Speech audio is not supported in this browser.'); return; }
     if (!germanVoice) pickGermanVoice();
-    if (germanVoice) {
-      speakText(w.word, 'de-DE', germanVoice, 0.83);
-    } else {
-      speakText(ttsFallback(w.say || w.word), 'en-US', null, 0.9);
-    }
+    if (germanVoice) speakText(w.word, 'de-DE', germanVoice, 0.83);
+    else speakText(ttsFallback(w.say || w.word), 'en-US', null, 0.9);
   }
 
   function speakSentence(w) {
     if (!w) return;
     if (!speechSupported) { window.alert('Speech audio is not supported in this browser.'); return; }
     if (!germanVoice) pickGermanVoice();
-    if (germanVoice) {
-      speakText(w.de || w.word, 'de-DE', germanVoice, 0.83);
-    } else {
-      speakText(ttsFallback(w.de || w.word), 'en-US', null, 0.9);
-    }
+    if (germanVoice) speakText(w.de || w.word, 'de-DE', germanVoice, 0.83);
+    else speakText(ttsFallback(w.de || w.word), 'en-US', null, 0.9);
   }
 
   /* ----------------------------------------------------------------
-   * AUTO PLAY
+   * AI HELPERS
    * ---------------------------------------------------------------- */
+  function extractText(response) {
+    if (typeof response === 'string') return response;
+    if (response && response.message && response.message.content) {
+      if (Array.isArray(response.message.content)) return response.message.content.map(function(p) { return p.text || ''; }).join('');
+      return response.message.content;
+    }
+    if (response && response.text) return response.text;
+    return '';
+  }
+
   async function getGrammarExplanation(w) {
     if (!w) return "";
     if (grammarCache[w.word]) return grammarCache[w.word];
     try {
-      var prompt = `Explain in English why the word "${w.word}" is used in the German sentence "${w.de}" (meaning "${w.en}"). Focus on grammar, conjugation, case, or word order. Keep it under 30 words.`;
+      var prompt = 'Explain in English why the word "' + w.word + '" is used in the German sentence "' + w.de + '" (meaning "' + w.en + '"). Focus on grammar, conjugation, case, or word order. Keep it under 30 words.';
       var response = await puter.ai.chat(prompt, { model: 'openai/gpt-4o-mini' });
-      var text = '';
-      if (typeof response === 'string') text = response;
-      else if (response && response.message && response.message.content) {
-        if (Array.isArray(response.message.content)) text = response.message.content.map(part => part.text || '').join('');
-        else text = response.message.content;
-      } else if (response && response.text) text = response.text;
+      var text = extractText(response);
       if (text) {
         text = text.replace(/[*#_`]/g, '').trim();
         grammarCache[w.word] = text;
@@ -657,6 +641,31 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     return "This word is a " + (w.pos || "word") + " in the sentence.";
   }
 
+  async function getMustKnow(w) {
+    if (!w) return "";
+    if (mustKnowCache[w.word]) return mustKnowCache[w.word];
+    try {
+      var prompt = 'Create a concise "Must know" guide for the German word "' + w.word + '" (meaning "' + w.english + '", part of speech: ' + w.pos + '). Include:\n' +
+        '1) For nouns: the plural form (e.g., "die Häuser").\n' +
+        '2) For verbs: key conjugations in present, past, future, and present continuous (use "werden + infinitive" for future, "sein + am + infinitive" for present continuous) with English translations.\n' +
+        '3) A brief explanation of how and when to use the word.\n' +
+        '4) One example sentence in German with its English translation.\n' +
+        'Format as a short, clear paragraph. Use English for explanations and German for forms/examples. Do not use markdown.';
+      var response = await puter.ai.chat(prompt, { model: 'openai/gpt-4o-mini' });
+      var text = extractText(response);
+      if (text) {
+        text = text.replace(/[*#_`]/g, '').trim();
+        mustKnowCache[w.word] = text;
+        saveMustKnowCache();
+        return text;
+      }
+    } catch (e) { console.error("Must know generation failed:", e); }
+    return "Usage information not available right now.";
+  }
+
+  /* ----------------------------------------------------------------
+   * AUTO PLAY
+   * ---------------------------------------------------------------- */
   function stopAutoPlay() {
     isAutoPlaying = false;
     var btn = $('autoPlay');
@@ -710,15 +719,11 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     var sentenceText = w.de || w.word;
     var sentenceLang = 'de-DE';
     var sentenceVoice = germanVoice;
-    if (!germanVoice) {
-      sentenceText = ttsFallback(w.de || w.word);
-      sentenceLang = 'en-US';
-      sentenceVoice = null;
-    }
+    if (!germanVoice) { sentenceText = ttsFallback(w.de || w.word); sentenceLang = 'en-US'; sentenceVoice = null; }
     await speakAsync(sentenceText, sentenceLang, sentenceVoice);
     if (!isAutoPlaying) return;
 
-    // 5. English translation
+    // 5. English translation of the sentence
     if (w.en) {
       if (statusEl) statusEl.textContent = "🔊 Narrating translation: " + w.en;
       await speakAsync(w.en, 'en-US');
@@ -732,6 +737,16 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     if (grammar) {
       if (statusEl) statusEl.textContent = "🔊 Narrating explanation: " + grammar;
       await speakAsync(grammar, 'en-US');
+      if (!isAutoPlaying) return;
+    }
+
+    // 7. Must know (usage & forms)
+    if (statusEl) statusEl.textContent = "🧠 Generating usage guide...";
+    var mustKnow = await getMustKnow(w);
+    if (!isAutoPlaying) return;
+    if (mustKnow && mustKnow !== "Usage information not available right now.") {
+      if (statusEl) statusEl.textContent = "🔊 Narrating usage guide...";
+      await speakAsync(mustKnow, 'en-US');
       if (!isAutoPlaying) return;
     }
 
@@ -780,6 +795,22 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     box.hidden = false;
   }
 
+  function renderMustKnow(w) {
+    var contentEl = $('mustKnowContent');
+    var statusEl = $('mustKnowStatus');
+    if (!contentEl) return;
+    if (!w) { contentEl.textContent = ''; if (statusEl) statusEl.textContent = ''; return; }
+    contentEl.textContent = 'Loading usage and forms…';
+    if (statusEl) statusEl.textContent = 'Fetching from AI tutor…';
+    getMustKnow(w).then(function(text) {
+      contentEl.textContent = text;
+      if (statusEl) statusEl.textContent = '';
+    }).catch(function() {
+      contentEl.textContent = 'Could not load usage information.';
+      if (statusEl) statusEl.textContent = '';
+    });
+  }
+
   function render() {
     var w = current();
     window.AppContext.word = w;
@@ -795,6 +826,8 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
       $('en').textContent = '';
       $('deSay').innerHTML = '';
       $('deSay').hidden = true;
+      $('mustKnowContent').textContent = '';
+      $('mustKnowStatus').textContent = '';
       $('mark').textContent = '✓ I know this';
       $('mark').style.opacity = '1';
       progress();
@@ -812,6 +845,7 @@ footer{color:var(--muted);font-size:12px;text-align:center;margin:28px 0 0;line-
     $('en').textContent = w.en || '';
 
     renderSentenceSay(w);
+    renderMustKnow(w);
 
     var isKnown = learned.has(w.word);
     $('mark').textContent = isKnown ? '✓ Learned' : '✓ I know this';
@@ -1294,4 +1328,4 @@ Speak simply, use English to explain, and provide the German text in bold if nec
 })();
 </script>
 </body>
-                                                                  </html>
+                              </html>
